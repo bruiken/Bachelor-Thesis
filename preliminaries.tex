@@ -1,5 +1,63 @@
 \chapter{Preliminaries}\label{preliminaries}
-This \emph{optional} chapter contains the stuff that your reader needs to know in order to understand
-your work.
-Your ``audience" consists of fellow third year computing science bachelor students who have done the same
-core courses as you have, but not necessarily the same specialization, minor, or free electives.
+% This \emph{optional} chapter contains the stuff that your reader needs to know in order to understand
+% your work.
+% Your ``audience" consists of fellow third year computing science bachelor students who have done the same
+% core courses as you have, but not necessarily the same specialization, minor, or free electives.
+
+\section{Term Rewriting Systems}
+Before we can talk about the non-termination of term rewriting systems, we first need to know what exactly they are. We will consider two types of rewriting systems: the ``normal'' Term Rewriting Systems and secondly Many-Sorted Term Rewriting Systems. They are both needed in order to be able to alter existing non-termination techniques (for the ``normal'' systems) into the many-sorted case. We will start off with the definition of the ordinary term rewriting system. For more details, see for example \cite{Klop:1993:TRS:162552.162559}.
+\subsection{Term Rewriting System}
+Intuitively, a term rewriting system (also just TRS), is a set of rewriting rules which can be applied on terms. More formally, it can be seen as a tuple containing an alphabet ($\Sigma$) and a set of rewriting rules ($R$). $\Sigma$ contains a typically infinite set of variables ($\mathcal{V}$) combined with a set of function symbols ($\mathcal{F}$). Every function symbol has an arity, which is the number of arguments it takes. The arity may be zero, in which case it can also be seen as a constant term.\newline
+We can define the possible terms in an alphabet $\Sigma$ as $\textit{Ter}\left(\Sigma\right)$. This set firstly contains the variables in $\Sigma$. Secondly, any function of which all its arguments are in $\textit{Ter}\left(\Sigma\right)$, is also added to the set.\newline
+Positions can be seen as subterms within a term. We define these positions by $\textit{Pos}\left(t\right)$ where $t \in \textit{Ter}\left(\Sigma\right)$:\newline
+$$
+\textit{Pos}(t) = \left\{\begin{array}{ll}
+        \left\{\epsilon\right\}, & \text{if } t \in \mathcal{V}\\
+        \left\{\epsilon\right\} \cup \{i.p \mid 1 \leq i \leq n \text{ and } p  \in \textit{Pos}(t_i)\} , & \text{if } t = f(t_1, \dots, t_n)
+        \end{array}\right.
+$$
+We say $\left.t\right|_p$ when we want to indicate the position $p$ within term $t$. The identity case is $\left.t\right|_\epsilon = t$.\newline
+Substitutions are mappings from terms to terms, they only apply to variables. This means that a substitution applied to a function symbol is equal to a substitution applied to the arguments of the function symbol separately.\newline
+
+\textbf{Example 2.1}: Suppose we have variables $\{ x, y \} \subseteq \mathcal{V}$ and function symbols $\mathcal{F} = \{ f, g, 0\}$ with arities of 2, 1 and 0 respectively. With these variables and function symbols we can create an alphabet $\Sigma = \mathcal{V} \cup \mathcal{F}$, then we can create terms from $\textit{Ter}(\Sigma)$. Possible terms are $t_1 = x$, $t_2 = 0$, $t_3 = f(x, y)$, $t_4 = g(f(0, x))$. Positions of these terms are as follows: $\textit{Pos}(t_1) = \{ \epsilon \}$, $\textit{Pos}(t_2) = \textit{Pos}(t_1), \textit{Pos}(t_3) = \{ \epsilon, 1.\epsilon, 2.\epsilon \} \text{ and }\textit{Pos}(t_4) = \{ \epsilon, 1.\epsilon, 1.1.\epsilon, 1.2.\epsilon \}$. We can for example take $\left. t_3\right|_{2.\epsilon} = y$.\newline
+
+\textbf{Example 2.2}: \textit{Continuation of example 2.1}. Let us say we want to create a substitution $\sigma_1 = \{ x \leftarrow 0, y \leftarrow g(y) \}$. We can apply this substitution to terms as follows: $\sigma_1(t_1) = \sigma_1(t_2) = 0$, $\sigma_1(t_3) = f(\sigma_1(x), \sigma_1(y)) = f(0, g(y))$ and $\sigma_1(t_4) = g(\sigma_1(f(0, x))) = g(f(0, \sigma_1(x))) = g(f(0, 0))$.\newline
+
+Rewrite rules are written as follows: $r_i : l \rightarrow r$ where $l$ and $r$ are terms in $\textit{Ter}(\Sigma)$. $r_i$ is optional and a name for the rule. $l$ must be a non-variable term. Also, if $\textit{Var}(t)$ defines the variables in term $t$, then $\textit{Var}(r) \subseteq \textit{Var}(l)$. That is, variables on the right hand side (RHS) must also occur in the left hand side (LHS). \newline
+
+\textbf{Example 2.3}: \textit{Continuation of example 2.1}. We can now create rules from the terms we have defined:\newline
+$$
+\begin{array}{lrcl}
+    r_1: & f(x, y) & \rightarrow & x \\
+    r_2: & f(x, y) & \rightarrow & 0 \\
+    r_3: & f(x, y) & \rightarrow & g(f(0, x))\\
+    r_4: & g(f(0, x)) & \rightarrow & x\\
+    r_5: & g(f(0, x)) & \rightarrow & 0
+\end{array}
+$$
+Note that these are the only possible rules we can create from the four terms we defined previously. The other combinations of terms all either break the rule that the LHS cannot be a variable, or break the rule that the RHS may only contain variables that are also on the LHS.
+
+\subsection{Many-Sorted Term Rewriting System}
+\subsubsection{Many-Sorted or First-Order}
+Many-Sorted rewriting systems are much like the previously explained rewriting systems. The difference is that in many-sorted term rewriting systems, all elements of the alphabet $\Sigma$ have a type. More precisely, they have a first-order type. Intuitively, this means that variables and arguments of functions may not be anything other than just base types, i.e. they may not be functions themselves. \newline
+This is exactly the opposite of higher-order functions. A function $f$ could for example be typed as $f :: \alpha \rightarrow \beta$. Which means that the function takes an argument of type $\alpha$ and has a return type $\beta$. Now let us consider a function $g :: \alpha \rightarrow (\alpha \rightarrow \beta)$, this is a function that takes an argument of type $\alpha$, then it is a function of type $\alpha \rightarrow \beta$, which is the same as the type of function $f$. If we were to supply the function with two arguments of type $\alpha$, we would get a return type of just $\beta$. Finally consider the function $h :: (\alpha \rightarrow \beta) \rightarrow \alpha$. Note that this function only has one argument, but the argument is not first-order. Instead, the function takes as an argument a function of type $\alpha \rightarrow \beta$. Functions $f$ and $g$ are first-order, where function $h$ is higher-order. \newline
+Notice that function $g$ can return the type $\alpha \rightarrow \beta$ when only supplied one argument. To prevent these types from being created, we only allow supplying functions with the same number of arguments as their arity.\newline
+Just as we just showed how function arguments may not be functions themselves, variables cannot be of type $\alpha \rightarrow \beta$ either.
+\subsubsection{Rewriting system}
+We do not need to change many of the previous definitions, we just need to make sure that every element of the alphabet gets a type and that all operations defined are not allowed to break the typing. For example, a term of type $\alpha$ may not be substituted with one of type $\beta$.\newline
+We define the alphabet of a many-sorted TRS as $\Sigma$, containing the set of variables $\mathcal{V}$ and the set of function symbols $\mathcal{F}$ as before. Now we extend this by saying that every element of $\mathcal{V}$ has a first-order type $\tau$. The function symbols in $\mathcal{F}$ are extended such that every element is of the form $F(x_1, \dots, x_n)$ with $n \in \mathbb{N} + \{0\}$, where $F$ has an output type $\tau_0$ and every $x_i$ with $1 \leq i \leq n$ has a first-order type $\tau_i$. \newline
+As explained above, we also need to make sure that when using substitutions, both sides of the substitution have the same type $\tau$.\newline
+When it comes to rules, it is much like the case in the substitutions, both sides of the rules must have the same type $\tau$.\newline
+
+\textbf{Example 2.4}: Let us create an alphabet $\Sigma$ consisting of the variables $\mathcal{V} = \{ x, y\}$, the types of these variables are as follows: $x$ has type $\alpha$ and $y$ has type $\beta$. Now we create the set of function symbols $\mathcal{F} = \{ f, g, b \}$. $f$ has type $\alpha \rightarrow \alpha \rightarrow \beta$, $g$ has type $\beta \rightarrow \alpha$ and $b$ is of type $\beta$. Substitutions such as $\sigma_1 = \{ b \leftarrow y \}$ and $\sigma_2 = \{ f(x, g(b)) \leftarrow y \}$ are possible, but we cannot create a substitution like $\sigma_2 = \{ x \leftarrow y \}$, since the type of $x$ ($\alpha$) does not match the type of $y$ ($\beta$).\newline
+
+\textbf{Example 2.5}: \textit{Continuation of Example 2.4}. To create an entire TRS, we also need some rewriting rules. With the alphabet we just created we can create the following rule: 
+$$
+\begin{array}{lrcl}
+    r_1: & f(g(y), x) & \rightarrow & y
+\end{array}
+$$
+This rule is correctly typed as the output type of $f$ is $\beta$ and the type of $y$ is also $\beta$. Also the arguments supplied to $f$ all have type $\alpha$. 
+
+\section{Cora}
+Cora, standing for COnstrained Rewriting Analyser\cite{Cora2019}, will be used for as the basis of my own non-termination analyser. As far as my own usage goes, it can be seen as an interpreter with some extra features already built into it, such as type checking. The program is written in Java and uses ANTLR\cite{Parr:2013:DAR:2501720} as its parsing tool.  

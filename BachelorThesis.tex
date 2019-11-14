@@ -12,6 +12,8 @@
 \usepackage{listings}
 \usepackage[a4paper]{geometry}
 \usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -30,6 +32,7 @@
 \setlength{\topmargin}{0cm}
 \setlength{\extrarowheight}{3pt} %for superscripts in tabular
 \setlength{\arraycolsep}{4pt}
+
 \lstset{basicstyle = \footnotesize, breaklines = true}
 
 \graphicspath{{imgs/}}
@@ -73,8 +76,11 @@ prof. dr. H. (Hans) Zantema\\
 
 \tableofcontents
 
+\setlength{\parskip}{10pt}
+
 \input{introduction}
 \input{preliminaries}
+\input{analysers}
 \input{matchingunification}
 \input{semiunification}
 \input{unfolding}

@@ -1,0 +1,44 @@
+\chapter{Experiments}\label{experiments}
+We have tested the unfolding technique on a number of examples from TRS (non-)termination competitions\cite{TermPortal}. The testing was limited to the unfolding technique, because it encompasses all the other techniques before. We did however, test the examples on both the concrete and abstract analyser. The results can be found in tables \ref{tab:result:concrete} and \ref{tab:result:abstract}.
+
+These are not the only tests we can run. Recall that the unfolding technique uses the semi-unification algorithm. We can also swap in the unification or even the matching algorithm in its place. This will not give us incorrect results as we have seen that matching, unification and semi-unification are all capable of detecting non-termination. The matching and unification algorithm are significantly faster algorithms than semi-unification, though. It is interesting to find out if using semi-unification over unification is significantly better at finding solutions. 
+
+It could for example be the case that for a TRS, unfolding with unification is enough to prove non-termination. If this is combined with the fact that the TRS is very large and unfolding with semi-unification results in a timeout, it might actually be useful to run the analyser with unification (or matching) too. 
+
+Another test is to run the analyser without augmenting the TRS as a pre-processing step. Even though the augmenting step might increase the chance of finding non-termination, it also can increase the number of rules significantly, which in its place increases the running time of the algorithm. 
+
+To run the tests and visualise the results, a small framework was created in Python to which the link can be found in the appendices. The tests were run on a Windows machine with an i7-8565U CPU and 16GB of RAM. 
+
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline
+\multicolumn{8}{|l|}{Concrete Analyser} \\ \hline
+\multicolumn{4}{|l|}{Augmented} & \multicolumn{4}{l|}{Non Augmented} \\ \hline
+\multicolumn{2}{|l|}{Semi-Unification} & \multicolumn{2}{l|}{Unification} & \multicolumn{2}{l|}{Semi-Unification} & \multicolumn{2}{l|}{Unification} \\ \hline
+Non Terminating & 0 & Non Terminating & 0 & Non Terminating & 0 & Non Terminating & 0 \\ \hline
+Maybe & 1 & Maybe & 1 & Maybe & 1 & Maybe & 1 \\ \hline
+Timeout & 2 & Timeout & 2 & Timeout & 2 & Timeout & 2 \\ \hline
+\end{tabular}
+    \caption{Concrete unfolding analyser results}
+\label{tab:result:concrete}
+\end{table}
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline \multicolumn{8}{|l|}{Abstract Analyser} \\ \hline
+\multicolumn{4}{|l|}{Augmented} & \multicolumn{4}{l|}{Non Augmented} \\ \hline
+\multicolumn{2}{|l|}{Semi-Unification} & \multicolumn{2}{l|}{Unification} & \multicolumn{2}{l|}{Semi-Unification} & \multicolumn{2}{l|}{Unification} \\ \hline
+Non Terminating & 0 & Non Terminating & 0 & Non Terminating & 0 & Non Terminating & 0 \\ \hline
+Maybe & 1 & Maybe & 1 & Maybe & 1 & Maybe & 1 \\ \hline
+Timeout & 2 & Timeout & 2 & Timeout & 2 & Timeout & 2 \\ \hline
+\end{tabular}
+    \caption{Abstract unfolding analyser results}
+\label{tab:result:abstract}
+\end{table}

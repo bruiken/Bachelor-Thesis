@@ -1,4 +1,72 @@
+\newcommand\TTTT{%
+ \textsf{T\kern-0.15em\raisebox{-0.55ex}T\kern-0.15emT\kern-0.15em\raisebox{-0.55ex}2\kern.15em}%
+}
+\newcommand\TTT{%
+ \textsf{T\kern-0.15em\raisebox{-0.55ex}T\kern-0.15emT}%
+}
+
 \chapter{Related Work}\label{relatedwork}
-In this chapter you demonstrate that you are sufficiently aware of the
-state-of-art knowledge of the problem domain that you have investigated as
-well as demonstrating that you have found a \emph{new} solution / approach / method.
+\section{(Non-)Termination}
+A lot of related work in the analysis of term rewriting systems is done in specifically the termination side. Though it should be noted that this work is relevant to the non-termination analysis. We know it is impossible to prove complete termination, so when analysing a TRS, it is interesting to look at non-termination, even when you are looking at termination. When you are looking at termination and you are able to prove non-termination, it is obviously not interesting to look at termination analysis techniques. Many tools use both termination and non-termination techniques to get an as complete answer as possible. The techniques implemented in this paper might know when a TRS is non-terminating, but it never knows for sure when a TRS is terminating, i.e. we never answer \texttt{YES}.
+
+\section{String Rewriting}
+String rewriting systems (abbreviated SRS) are rewriting systems where the rules define how strings can be replaced with other strings. For example:
+\[
+\begin{array}{lrcl}
+    r_1: & abc & \rightarrow & ac \\
+    r_2: & a & \rightarrow & b \\
+    r_3: & bc & \rightarrow & acb
+\end{array}
+\]
+String rewriting systems could be seen as normal term rewriting systems with only unary functions symbols. Because of this, techniques made for term rewriting systems can also be applied on string rewriting systems, by first transforming the SRS into a TRS. 
+
+\section{Dependency Pair Framework}
+One of the most popular techniques for proving (non-)termination is the Dependency Pair Framework\cite{thiemann2007dp}. The dependency pair framework is built upon the dependency pair approach\cite{arts2000termination}. In the dependency pair framework root symbols of left hand sides are called \textit{defined} and other symbols are called constructors. For each defined symbol $f$, a fresh tuple symbol $F$ is created. Then the set of dependency pairs of a TRS $R$ is called $\textit{DP}(R)$ and is defined as follows. For each rule $f(s_1, \dots, s_n) \rightarrow r$, and then for each subterm with a defined root $g(t_1, \dots, t_n)$, a pair $F(s_1, \dots, s_n) \rightarrow G(t_1, \dots, t_m)$ is added to $\textit{DP}(R)$. 
+
+Now the idea is to let techniques operate on the dependency pairs instead of on the TRS itself. This way, the problems are smaller and thus easier to solve. Techniques that operate on dependency pairs are called dependency pair processors or \textit{Proc}. The processor can either return a set of dependency pair problems, or \texttt{no}. 
+
+To prove termination, a processor needs to be sound. This means that for all Dependency Pair problems $d$, $d$ is finite whenever $\textit{Proc}(d) \neq \texttt{no}$ and all problems in $\textit{Proc}(d)$ are finite. For non-termination, completeness of a processor is needed. A processor is complete, if for all Dependency Pair problems $d$, $d$ is infinite whenever $\textit{Proc}(d) = \texttt{no}$ or when $\textit{Proc}(d)$ contains an infinite Dependency Pair problem.  
+
+\section{(Non)-Termination Techniques}
+\subsection*{Polynomial Interpretations}
+Polynomial interpretations \cite{BENCHERIFA1987137} can be used as a way to detect termination of term rewriting systems. Here, the goal is to give polynomial interpretations for each function symbol and then prove that for each left side is greater than the right side using the interpretations. So formally, given a TRS $\{ l_1 \rightarrow r_1, \dots, l_n \rightarrow r_n \}$, the goal is to find polynomial interpretations $\left[ f \right]$ for every function symbol $f$ in the TRS, such that $l_i >_{\left[ \cdot \right]} r_i$ with $i \in [1, n]$. 
+
+This technique has been extended and improved over time for example in \cite{HIROKAWA:PolyNeg}, to extend the class of rewriting systems of which termination  can be detected using negative coefficients. And in \cite{FUHSKOP:PolyHO}, to extend the technique to be able to work in higher order term rewriting systems.
+\subsection*{Path Orderings}
+In Dershowitz \cite{DERSHOWITZ1982279} a number of orderings are given to proof termination. One of these orderings is called the recursive path ordering. In the particular case of string rewriting systems, we can look at it as follows\cite{ZANTEMA:TORPA}. First a total ordering called the fixed order $>$ is placed over the alphabet $\Sigma$ of the SRS. For such a fixed order, there is an order denoted $>_{\text{rpo}}$ on all the possible strings from the alphabet $\Sigma$ called the recursive path order. Now we can say that an SRS is terminating if the recursive path order relation $>_{\textit{lpo}}$ holds for all rules in the SRS. 
+
+The relation $l >_{\textit{lpo}} r$ is true if and only if the left side can be rewritten as $al'$ for some $a$ in the alphabet, and either of the following two statements hold: 
+\begin{itemize}
+    \itemsep 0em
+    \item[-] $l' = r$ or $s' >_{\textit{lpo}} r$
+    \item[-] The right side of the rule $r$ can be written as $br'$ for some $b$ in the alphabet, and either of the following two statements hold:
+    \begin{itemize}
+        \itemsep 0em
+        \item[-] $a > b$ and $l >_{\textit{lpo}} r'$
+        \item[-] $a = b$ and $l' >_{\textit{lpo}} r'$
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Finite Automata}
+A very recent technique for proving non-termination is by using finite automata \cite{ENDRULLIS:AUTOMATA}. Here, the goal is not to directly look for an infinite reduction in a TRS. Instead, a regular language is sought with properties from which non-termination follow. Then these properties are defined in a propositional formula. This formula can be analysed by a SAT solver, if the formula can be satisfied, the original TRS is non-terminating. An automaton is used to represent the language that is sought after, it is given a fixed number of states. 
+
+\section{Tools}
+At the time of writing, there (surprisingly) is no clear sign of any existing tool to detect non-termination in many-sorted term rewriting systems. There are, however, a lot of (non-)termination tools out there. Some examples are NTI, AProVE, NaTT, \TTTT, WANDA and TORPA.
+
+\subsection*{NTI}
+NTI\cite{payet2018guided} stands for Non Termination Inference, it is a tool to prove non-termination of term rewriting systems. The prover uses guided unfoldings, which is a reconsideration of the unfolding analyser we have adapted\cite{Payet:Unfolding}. The first implementation of NTI is open source and written in C++, the newest version (which is currently participating in competitions), is not open source\cite{PAYET:NTI}.
+
+\subsection*{AProVE}
+AProVE\cite{10.1007/11814771_24} is a tool that can prove both termination and non-termination. AProVE is built upon the Dependency Pair Framework and contains at least 22 processors. These include processors used for higher-order functions, such as processors based on dependency graphs, orders and on usable rules, but also processors for proving non-termination\cite{GIESL:APROVE}. AProVE is not open-source. 
+
+\subsection*{NaTT}
+The Nagoya Termination Tool (NaTT) is a closed source termination prover\cite{Yamada2014NagoyaTT}. It was the first tool to implement the weighted path order. NaTT, like AProVE, is built upon the Dependency Pair Framework. 
+
+\subsection*{\TTTT}
+\TTTT is the Tyrolean Termination Tool 2\cite{TTTT}. It is the open-source successor of the non open-source \TTT \cite{HIROKAWA2007474}. The tool is a termination analyser for first-order term rewriting systems. Just like AProVE, it is based on the Dependency Pair Framework, with processors such as increasing interpretations, a modular match-bound technique, uncurrying and outermost loops\cite{TTTT}.
+
+\subsection*{WANDA}
+WANDA is an open-source higher-order termination tool\cite{KOP:WANDASITE}. The tool features a number of techniques which include the Dependendy Pair Framework, polynomial interpretations and higher-order recursive path ordering. The theory of WANDA is based upon\cite{KOP:WANDA}. 
+
+\subsection*{TORPA}
+TORPA is a termination analysis tool that focuses on string rewriting systems \cite{ZANTEMA:TORPA}, TORPA is closed source. It includes a number of techniques, such as: polynomial interpretations, recursive path ordering, the Dependency Pair Framework, RFC-match-bounds and semantic labelling. 

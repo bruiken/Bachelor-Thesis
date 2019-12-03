@@ -1,11 +1,21 @@
 \chapter{Introduction}\label{introduction}
-\begin{itemize}
-    \item Introduce TRSs
-    \item Introduce Non termination
-    \item About many-sorted vs non sorted 
-    \item Introduce existing techniques for non-sorted
-    \item Explain that it needs altering for many-sorting
-    \item Explain that this might change performance
-    \item Introduce Cora + What will be built upon it by me
-    \item For each chapter: what is it about\dots
-\end{itemize}
+Term rewriting systems are a simple yet powerful tool used all over, with $\lambda$-calculus perhaps being the best known example. Term rewriting systems can also be found in definitions of functional languages and other calculi. The rewriting systems have been around for decades and most definitely will be around for many more. They are still actively researched and extended. 
+
+The basic notation of term rewriting systems can be defined as a set of rules. These rules can be used to ``translate'' terms into other terms. Terms, in their place, consist of functions and variables. An example could be as follows.
+\[
+\begin{array}{lrcl}
+r_1: & f(x) & \rightarrow & g(x) \\
+r_2: & 0 & \rightarrow & 1
+\end{array}
+\]
+Here, $f$, $g$, $0$ and $1$ are functions, and $x$ is a variable. 
+
+One of these many branches of research focuses on termination and non-termination of term rewriting systems. Termination and non-termination are interesting properties to look at since they are properties we want to know about. We can translate (functional) languages into term rewriting systems to then look at the termination properties of that code. Even though we know that (non-)termination of programs is generally undecidable, we are increasing the class of programs of which we \textit{can} prove those properties further and further.
+
+Previous research focused on non-sorted term rewriting systems, where variables and functions do not have specific type definitions. In many-sorted term rewriting systems, variables and functions do have specific type definitions, specifically first-order types. Sorted term rewriting covers higher-order functions too. 
+
+In this previous work, many techniques for detecting (non-)termination have been created, examples are unfolding and the dependency pair framework. These techniques are not made for (many-)sorted terms, and therefore will not work for them without adaptations. For example, certain steps or created rules might be illegal when working in a sorted rewriting system. These adaptations, even though they might only be small adaptations, can have impact on the strength of the technique. For example, a technique that focuses on creating as many rules as possible might create much less rules when they have type bounds. This could be an improvement to the technique but it might also result in a decrease of its effectiveness. With less rules to analyse the analyser runs faster but gets less opportunities to find the non-termination.  
+
+We will take a look at a number of techniques to prove non-termination and adapt them to make them work for many-sorted rewriting systems. The adaptations will be implemented in an analyser in Java. As a basis for parsing and basic functionality Cora will be used. 
+
+In chapter \ref{preliminaries} the necessary preliminaries will be given. Chapter \ref{analysers} gives some more information on the analysers that will be implemented. Then chapters \ref{matching-unification}, \ref{semi-unification} and \ref{unfolding} are about transforming the existing techniques to make them work in the many-sorted rewriting. Experiments are given in chapter \ref{experiments}. Then chapter \ref{relatedwork} gives some background information on existing techniques and tools. Finally we get chapter \ref{futurework} for future work within the subject and \ref{conclusions} concludes the thesis. 

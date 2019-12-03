@@ -23,7 +23,7 @@ As noted above, the matching algorithm (including the type checks) was already b
 \begin{algorithm}
 \caption{Matching}
 \label{matching}
-\begin{algorithmic}[5]
+\begin{algorithmic}[1]
 \STATE Input terms $t_1$ and $t_2$, initialize $\sigma = \emptyset$
 \IF {$t_1$ is a variable}
   \IF {$\sigma$ contains $t_1$}
@@ -50,7 +50,7 @@ As noted above, the matching algorithm (including the type checks) was already b
 
 \section{Unification}
 Similarly to matching, we can also apply unification to detect non-termination of term rewriting systems. Recall that unification of two terms $t_1$ and $t_2$ is possible when we can find a $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. We know that if the left hand side of a rule unifies with some non variable subterm of the right hand side, the TRS is non-terminating.\newline
-Suppose that we have a rule $r_1: t_1 \rightarrow t_2$, and that there is some non-variable subterm $t_2'$ of $t_2$ and that there is a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2')$. We can now create an infinite loop: apply $r_1$ to $\sigma(t_1)$, then apply $r_1$ to the result of that\dots.
+Suppose that we have a rule $r_1: t_1 \rightarrow t_2$, and that there is some non-variable subterm $t_2'$ of $t_2$ and that there is a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2')$. We can now create an infinite loop: apply $r_1$ to $\sigma(t_1)$, then apply $r_1$ to the result of that and repeat this process\dots.
 
 \textbf{Example 4.2}: Take the rule $r_1: f(g(x), z, y) \rightarrow f(y, g(x), y)$. To try to unify the left side with some non-variable subterm on the right, the most sensible subterm to choose is the entire right side. We can unify these two sides by taking $\sigma = \{ g(x) \leftarrow y, g(x) \leftarrow z \}$. If we apply $r_1$ to $\sigma(f(g(x), z, y)) = f(g(x), g(x), g(x))$, we get $f(g(x), g(x), g(x))$ back, which can immediately be applied to $r_1$ again, this clearly keeps looping indefinitely.
 

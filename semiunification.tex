@@ -12,7 +12,7 @@ The idea is the same as with matching and unification, we will try to semi-unify
 We will implement the algorithm described by Kapur et al for many-sorted term rewriting systems. The implementations are two separate algorithms, the first algorithm is sufficient to decide semi-unifiability, and as a result will generate a set of rewriting rules. But to obtain the substitutions, we need the second algorithm, it takes as an input the result from the first algorithm, then extracts the solution from it.
 
 \section{Algorithm 1}
-In the algorithm we will be looking for two substitutions $\sigma$ and $\rho$, so that for two terms $t_1$ and $t_2$, $\rho(\sigma(t_1)) = \sigma(t_2)$. To represent the $\sigma$ substitution, we use some special variables noted as $s_x$, this is the same as saying $\sigma(x)$. This mapping is captured in a substitution $\theta$, so we have for each variable $x$ in $t_1$ and $t_2$, $\theta(x) = s_x$. 
+In the algorithm we will be looking for two substitutions $\sigma$ and $\rho$, such that for two terms $t_1$ and $t_2$, $\rho(\sigma(t_1)) = \sigma(t_2)$. To represent the $\sigma$ substitution, we use some special variables noted as $s_x$, this is the same as saying $\sigma(x)$. This mapping is captured in a substitution $\theta$, so we have for each variable $x$ in $t_1$ and $t_2$, $\theta(x) = s_x$. 
 
 Before we can implement the algorithm itself, we need two notions of rewriting that are used within it. These are a notion of distributivity and a notion of cancellativity. 
 \subsection{Distributivity}
@@ -56,7 +56,7 @@ The proof of the full algorithm can be found in the paper\cite{SemiUnification}.
 \end{algorithm}
 
 \section{Algorithm 2} 
-Even though the first algorithm described above suffices to detect semi-unification, we will still implement the second algorithm to extract the substitutions from the resulting rules. We will do this because, even though we are certain the algorithm is correct, it is still a complex algorithm, and small mistakes could easily be made. By implementing the second algorithm, we have a double check to ensure that the result is actually correct. If, after applying the second algorithm, the terms do not semi-unify with the substitutions, we can deny semi-unifiability.
+Even though the first algorithm described above suffices to detect semi-unification, we will still implement the second algorithm to extract the substitutions from the resulting rules. We will do this because, even though we are certain the algorithm is correct, it is still a rather complex algorithm in which small mistakes could easily be made. By implementing the second algorithm, we have a double check to ensure that the result is actually correct. If, after applying the second algorithm, the terms do not semi-unify with the substitutions, we can deny semi-unifiability.
 \subsection{Implementation}
 The algorithm can be found in Algorithm \ref{semiunification2} on page \pageref{semiunification2}. Note that here too, not many changes need to be made in order to make the algorithm work for many-sorted terms. The most important points are in lines 4 and 17, where new fresh variables are created. These variables need to have the correct typing. On line 4, this means that the variable $u$ should have the same type as variable $x$. On line 17, this means that all the fresh variables need to have the same type as term $t$. This algorithm is also implemented in my fork of Cora as an analyser called \texttt{SemiUnificationAnalyzer}.
 

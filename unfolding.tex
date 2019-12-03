@@ -1,10 +1,10 @@
 \chapter{Unfolding}\label{unfolding}
-Unfolding is yet another method to detect non-termination. But this time the method does not detect non-termination by itself, rather it makes use of our previously defined method semi-unification. The unfolding technique, as it name suggests, unfolds a term rewriting system in such a way that we can use semi-unification on the resulting rules. We will follow Payets paper\cite{Payet:Unfolding}, and adapt the technique where needed for many-sorted terms. 
+Unfolding is yet another method to detect non-termination. But this time the method does not detect non-termination by itself, rather it makes use of our previously defined method semi-unification. The unfolding technique, as it name suggests, unfolds a term rewriting system in such a way that we can use semi-unification on the resulting rules. Intuitively, we can see this as creating existing rules where we apply rules on the right hand sides. We will follow Payets paper\cite{Payet:Unfolding}, and adapt the technique where needed for many-sorted terms. 
 
-The paper defines two main techniques, firstly a ``normal'' unfolding (which we will call concrete unfolding), then an improved version upon that called abstract unfolding. We will look at both of these and also implement them into analysers. 
+The paper defines two main techniques, firstly a ``normal'' unfolding (which we will refer to as concrete unfolding), then an improved version upon that called abstract unfolding. We will look at both of these and also implement them into analysers. 
 
 \section{Concrete Unfolding}
-The concrete unfolding technique has one main operator, the unfolding operator. The definition as in \cite{Payet:Unfolding} is as follows:
+The concrete unfolding technique has one main operator: the unfolding operator. The definition as in \cite{Payet:Unfolding} is as follows:
 \[
 T_R(X) = \left\{ \left( l \rightarrow r\left[ p \leftarrow r' \right] \right)\theta \middle\vert \begin{array}{l} 
 l \rightarrow r \in X, \\
@@ -14,24 +14,24 @@ l' \rightarrow r' \in R \textit{ renamed with fresh variables}, \\
 \end{array}
 \right\} 
 \]
-Where $\textit{NPos}(r)$ means all the non variable positions and $r\left[ p \leftarrow r'\right]$ means replacing position $p$ in $r$ with $r'$. We have to note that this does not work for many-sorted terms as is. The set of rules is created by replacing subterms of the right sides using right sides from other rules. Without any types, this can be done without problems. But we need to explicitly check the types in the unfolding operator we are going to use:
-\[
-T_R(X) = \left\{ \left( l \rightarrow r\left[ p \leftarrow r' \right] \right)\theta \middle\vert \begin{array}{l} 
-l \rightarrow r \in X, \\
-p \in \textit{NPos}(r), \\
-l' \rightarrow r' \in R \textit{ renamed with fresh variables}, \\
-\textit{type}(\left.r\right|_p) = \textit{type}(r'),\\
-\theta \in mgu(\left.r\right|_p, l')
-\end{array}
-\right\} 
-\]
-From this an unfolding sequence can be created, the idea is to feed the result of an unfolding into the next step as follows. $T_R \uparrow 0 = R$ and the next steps are $T_R \uparrow (n + 1) = T_R(T_R \uparrow n)$ where $n \in \mathbb{N}$. 
+Where $\textit{NPos}(r)$ gives back all the non variable positions and $r\left[ p \leftarrow r'\right]$ means replacing position $p$ in $r$ with $r'$. 
+
+From this an unfolding sequence can be created. The idea is to feed the result of an unfolding into the next step as follows. Begin with $T_R \uparrow 0 = R$ and the next steps are $T_R \uparrow (n + 1) = T_R(T_R \uparrow n)$ where $n \in \mathbb{N}$. 
 
 This operator by itself works as a non-termination analyser. Obviously a limit has to be set on the maximum number of unfoldings. To use this as an analyser, we can first do an unfolding step, then do the same thing as we did with semi-unification: for each non-variable subterm on the right hand side, check if it semi-unifies with the left hand side. 
 
 We can use this operator and do our analysis on the result because it retains the non-termination property of a rewriting system. Intuitively, all we are doing is applying rules on some subterms of right hand sides. And applying rules does retain the non-termination property. 
 
-\textbf{Example 6.1} (The same example as in \cite{Payet:Unfolding}, from \cite{TOYAMA1987141}, types are omitted). Take the following rewrite system: 
+\textbf{Example 6.1} \textit{We will omit types in this example}. Take the following rewriting system: 
+\[
+\begin{array}{lrcl}
+    r_1: & f(x) & \rightarrow & g(x) \\
+    r_2: & g(x) & \rightarrow & f(x)
+\end{array}
+\]
+Clearly, this system is non-terminating: we can indefinitely apply the rules given a term that contains either of the functions $f$ or $g$. Note that the semi-unification analyser will not be able to detect this, as there exists no non-variable subterms on right hand sides that semi-unify with the left hand side. Now let us see what happens when we apply a step of unfolding. We take as $(l \rightarrow r) = r_1$, the position $p = \epsilon$, $l' \rightarrow r'$ with fresh variables $ = g(x') \rightarrow f(x')$. Now we have a most general unifier $\textit{mgu}(g(x), g(x')) = \{ x \leftarrow x' \}$. So our resulting rule is $f(x) \rightarrow f(x)$. We do not have to look any further as the left hand sides semi-unifies with the right hand side: we can take empty substitutions for both $\rho$ and $\sigma$. 
+
+\textbf{Example 6.2} (The same example as in \cite{Payet:Unfolding}, from \cite{TOYAMA1987141}, types are omitted). Take the following rewrite system: 
 \[
 \begin{array}{lrcl}
     r_1: & f(0, 1, x) & \rightarrow & f(x, x, x) \\
@@ -41,17 +41,18 @@ We can use this operator and do our analysis on the result because it retains th
 \]
 We know this system is non-terminating (take the term $f(0, 1, g(0, 1))$), but as we will see, our current definition of unfolding is not strong enough to prove non-termination for this example. We start with the first level of unfolding, $T_R \uparrow 0 = R$. At this level we cannot prove non-termination using semi-unification as there is no non-variable position on a right hand side that semi-unifies with the left hand side of that rule. When we try to unfold to the next level, we see that it is not possible to unfold rules $r_2$ and $r_3$, since they do not have a non-variable subterm on the right hand side. $r_1$ also cannot be unfolded, the only non-variable subterm on the right is $f(x, x, x)$. And there is no left hand side of a rule that semi-unifies with that term. So at the first level we already have no terms left.  
 
-As we have just seen, we need some way to pre-process the rules in order to get useful unfoldings. For this, we can use the Augmented TRS (from \cite{Payet:Unfolding}).  
+As we have just seen, we need some way to pre-process the rules in order to get useful unfoldings. For this, we can use the Augmented TRS (also from \cite{Payet:Unfolding}).  
 
-An augmented trs, denoted $R^+$, is a renaming of an existing TRS $R$. The idea is to substitute variables in rules with left hand sides from other rules. More precisely, for all rules $l \rightarrow r \in R$, we create rules $(l \rightarrow r)\theta$ in $R^+$. Here the $\theta$ is a substitution in the form of $\{ t_1 \leftarrow x_1, \dots, t_n \leftarrow x_n \}$, where $n \in \mathbb{N}$, $\{ x_1, \dots, x_n \} \in \textit{Var}(l)$ and $t_i$ is a left hand side in $R$ that is variable disjoint from $l \rightarrow r$ and all other $t_j$ in $\theta$. 
+\subsection*{Augmented Term Rewriting System}
+An augmented trs, denoted $R^+$, is a renaming of an existing TRS $R$. The idea is to substitute variables in rules with left hand sides from other rules. This way, we know that we will be able to apply rules when unfolding. More precisely, for all rules $l \rightarrow r \in R$, we create rules $(l \rightarrow r)\theta$ in $R^+$. Here the $\theta$ is a substitution in the form of $\{ t_1 \leftarrow x_1, \dots, t_n \leftarrow x_n \}$, where $n \in \mathbb{N}$, $\{ x_1, \dots, x_n \} \in \textit{Var}(l)$ and $t_i$ is a left hand side in $R$ that is variable disjoint from $l \rightarrow r$ and all other $t_j$ in $\theta$. 
 
-Again we need to make a small adaptation to make this work for many-sorted terms. In particular, we only want to replace a variable with some left-hand side if they have the same type. So a substitution $\{ t_i \leftarrow x_i \}$ can only be made if $\textit{type}(x_i) = \textit{type}(t_i)$. Also, note that this augmented retains the non-termination property of a TRS. We are basically just creating extra rules where variables are already replaced with terms on which we know we can apply rules.  
+Again we need to make an adaptation to make this work for many-sorted terms. In particular, we only want to replace a variable with some left-hand side if they have the same type. So a substitution $\{ t_i \leftarrow x_i \}$ can only be made if $\textit{type}(x_i) = \textit{type}(t_i)$. Also, note that this augmented retains the non-termination property of a TRS. We are basically just creating extra rules where variables are already replaced with terms on which we know we can apply rules.  
 
-To use this augmented TRS in an analyser, we only have to change our initial unfolding step. We defined this as $T_R \uparrow 0 = R$, now we adapt this to $R^+$, such that $T_R \uparrow 0 = R^+$. The other step stays the same as $T_R \uparrow (n + 1) = T_R(T_R \uparrow n)$. 
+To use this augmented TRS in an analyser, we only have to change our initial unfolding step. We defined this as $T_R \uparrow 0 = R$, now we adapt this to $R^+$, such that $T_R \uparrow 0 = R^+$. The other step stays the same: $T_R \uparrow (n + 1) = T_R(T_R \uparrow n)$. 
 
-\textbf{Example 6.2} (Example 6.1 continued): To create the augmented rewrite system using a rewrite system with the rules $r_1$, $r_2$ and $r_3$, we consider the rules one by one. If we look at the first rule, there is only one variable: $x$. We can either not change this variable (leaving us with an empty substitution), replace it with the left hand side of $r_1$, or replace it with the left hand side of $r_2$ (we can ignore $r_3$ as its left hand side is equal to that of $r_2$). So for $r_1$ we have:
+\textbf{Example 6.3} (Example 6.2 continued): To create the augmented rewrite system using a rewrite system with the rules $r_1$, $r_2$ and $r_3$, we consider the rules one by one. If we look at the first rule, there is only one variable: $x$. We can either not change this variable (leaving us with an empty substitution), replace it with the left hand side of $r_1$, or replace it with the left hand side of $r_2$ (we can ignore $r_3$ as its left hand side is equal to that of $r_2$). So for $r_1$ we have:
 $$ \theta_{r_1,0} = \emptyset, \theta_{r_1,1} = \{ f(0, 1, x') \leftarrow x \}, \theta_{r_1,2} = \{ g(x', y') \leftarrow x \}\text{.}$$
-The substitutions for the other rules are going to be equal as their left sides are equal:
+The substitutions for the other two rules are going to be equal as their left sides are equal:
 \begin{center}
 \makebox[0cm]{
 \(\begin{array}{rclrcl}
@@ -65,7 +66,7 @@ The substitutions for the other rules are going to be equal as their left sides 
 \end{center}
 The resulting augmented rewrite system then consists of all the substitutions applied on the rules.
 
-\textbf{Example 6.3} (Example 6.2 continued): We can now prove using the augmented rewriting system combined with the unfolding operator, that the rewriting system is non-terminating. Take the rule resulting from the substitution $\theta_{r_1, 2}$ on $r_1$: 
+\textbf{Example 6.4} (Example 6.3 continued): We can now prove using the augmented rewriting system combined with the unfolding operator, that the rewriting system is non-terminating. Take the rule resulting from the substitution $\theta_{r_1, 2}$ on $r_1$: 
 $$f(0, 1, g(x', y')) \rightarrow f(g(x', y'), g(x', y'), g(x', y'))$$
 At the first unfolding level we can take position $1.\epsilon$ of the right hand side and the rule $g(x'', y'') \rightarrow x''$ to get to the rule:
 $$f(0, 1, g(x', y') \rightarrow f(x', g(x', y'), g(x', y'))$$ 
@@ -73,7 +74,7 @@ Then, on the next unfolding level, we can do the same using positon $2.\epsilon$
 $$f(0, 1, g(x', y')) \rightarrow f(x', y', g(x', y'))$$
 Now note that we can semi-unify this two sides by taking $\rho = \emptyset$ and $\sigma = \{ 0 \leftarrow x', 1 \leftarrow y' \}$. Therefore, the TRS does not terminate.
 
-\textbf{Example 6.4} (Example 6.1 continued): Let us now take a look at the same rules \textit{with} typing. We will type the functions as follows:
+\textbf{Example 6.4} (Example 6.2 continued): Let us now take a look at the same rules \textit{with} typing. We will type the functions as follows:
 \[
 \begin{array}{rcl}
     f & :: & \alpha \rightarrow \alpha \rightarrow \alpha \rightarrow \alpha \\
@@ -98,11 +99,16 @@ These augmented rules will result in 11 rules after the first unfolding, then 6 
 The unfolding analyser is implemented in the \texttt{ConcreteUnfoldingAnalyzer}. This implementation also includes pre-processsing the given TRS into an augmented TRS.  
 
 \section{Abstract Unfolding}
-The abstract unfolding analyser is an improvement upon the concrete variant. The abstract unfolding tries to prevent useless rules to keep persisting through the unfolding operator. It also prevents as many calls to the semi-unification check as possible by first processing all the rules $l \rightarrow r$ into rules $l \rightarrow r'$ where $r'$ is some subterm of $r$. The calls to semi-unification are reduced by only applying the semi-unification algorithm on on the root positions of $r'$. 
-\subsection*{Abstract domain}
-The abstract domain is much like a normal domain for a TRS, consisting of pairs of terms $(l, r)$. Except the abstract domain also knows two special elements, namely \texttt{true} and \texttt{false}. Where \texttt{true} denotes pairs of terms that semi-unify, \texttt{false} denotes non-useful pairs of terms. We call a pair $(l, r)$ useful when we can unfold it into a pair of terms $(l', r')$ which semi-unify. 
+The abstract unfolding analyser is an improvement upon the concrete variant. The abstract unfolding tries to prevent useless rules to keep persisting through the unfolding operator. It also prevents as many calls to the semi-unification check as possible by first processing all the rules $l \rightarrow r$ into rules $l \rightarrow r'$, where $r'$ is some subterm of $r$. The calls to semi-unification are reduced by only applying the semi-unification algorithm on on the root positions of $r'$. 
+
+\subsection*{Useful Pairs}
+We call a pair of terms $(l, r)$ useful when either $l$ and $r$ semi-unify, or when the pair can be unfolded to a pair of terms $(l', r')$ such that $l'$, $r'$ semi-unify. Notice that when we find a useful pair, we have exactly what we need. Because then we know we can unfold to a pair of terms that semi-unify, thus non-terminate. We will integrate this notion of useful pairs into an abstract domain:
+
+\subsection*{Abstract Domain}
+The abstract domain is much like a normal domain for a TRS, consisting of pairs of terms $(l, r)$. Except the abstract domain also knows two special elements, namely \texttt{true} and \texttt{false}. Where \texttt{true} denotes pairs of terms that semi-unify and \texttt{false} denotes non-useful pairs of terms.
+
 \subsection*{Abstraction}
-The abstraction function is a function that creates an abstract TRS using an ordinary TRS. Note how it also does the flattening step described above, also note that this definition slightly differs from the one in \cite{Payet:Unfolding}, as we need an extra check for typing: 
+The abstraction function is a function that creates an abstract TRS using an concrete TRS. Note how it applies the flattening step as described before: 
 \[
 \alpha(R) = \bigcup\limits_{l \rightarrow r \in R} \{\alpha_R(l, \left.r\right|_p) \mid p \in \textit{Pos}(r) \land \textit{type}(l) = \textit{type}(\left.r\right|_p)\} 
 \]
@@ -116,6 +122,7 @@ The abstraction function is a function that creates an abstract TRS using an ord
     \end{array}
 \right.
 \]
+
 \subsection*{Unfolding operator}
 The unfolding operator is a lot like the operator we defined for the concrete unfolding, only this time we will apply the abstraction function on the resulting pairs of terms:
 \begin{center}
@@ -125,68 +132,184 @@ T^{\#}_R(X^{\#}) = \left\{ \alpha_R\left( l \theta,  r\left[ p \leftarrow r' \ri
 l \rightarrow r \in X^{\#}, \\
 p \in \textit{NPos}(r), \\
 l' \rightarrow r' \in R \textit{ renamed with fresh variables}, \\
-\textit{type}(\left.r\right|_p) = \textit{type}(r'),\\
 \theta \in mgu(\left.r\right|_p, l')
 \end{array}
 \right\} 
 \)}
 \end{center}
-Note that this takes as input an abstract domain, so also the special elements \texttt{true} and \texttt{false}. The element \texttt{false} can always be ignored, as it only represents non-useful terms. The element \texttt{true} however, needs its own case. If $\texttt{true} \in X^{\#}$, then $T_R^{\#}(X^{\#}) = \{ \texttt{true} \}$. 
+Note that this takes as input an abstract domain, so also the special elements \texttt{true} and \texttt{false}. The element \texttt{false} can always be ignored, as it only represents non-useful terms. The element \texttt{true} needs its own case, however. If $\texttt{true} \in X^{\#}$, then $T_R^{\#}(X^{\#}) = \{ \texttt{true} \}$. 
 
-With this operator we can define the unfolding sequence just as before, by replacing the previous operator $T_R$ with $T^{\#}$ and by applying the abstraction function on the augmented TRS in the first level. So we get $T^{\#}_R \uparrow 0 = \alpha(R^+)$ and for all next levels: $T^{\#}_R \uparrow (n+1) = T^{\#}_R(T^{\#}_R \uparrow n)$, with $n \in \mathbb{N}$. 
+With this operator we can define the unfolding sequence just as before. We do this by replacing the previous operator $T_R$ with $T^{\#}$ and by applying the abstraction function on the augmented TRS in the first level. So we get $T^{\#}_R \uparrow 0 = \alpha(R^+)$ and for all next levels: $T^{\#}_R \uparrow (n+1) = T^{\#}_R(T^{\#}_R \uparrow n)$, with $n \in \mathbb{N}$. 
 
-With this definition we can prove non-termination, if there exists an unfolding such that \texttt{true} is an element of that unfolding, the TRS does not terminate. 
+With this definition we can prove non-termination: if there exists an unfolding such that \texttt{true} is an element of that unfolding, the TRS does not terminate. 
 
-\subsection*{Useful Pairs}
-In the definition for the abstraction function we said ``$(l, r) \text{ if } (l, r) \text{ is useful for } R$''. But of course, we need a notion of when a pair of terms is useful. We follow Payet in his steps and again adapt it where needed. First we create a lemma which we can use in our further steps: 
+\section*{Useful Pairs}
+As mentioned before, the definition of useful terms is exactly what we want to find. But since this definition is actually the property that we are looking for, we need a way to actually detect useful pairs in another way than saying ``when the pair proves non-termination''. In this section we will create a way to detect the usefulness to use in our analyser. We will follow Payet in his steps and again adapt it where needed. We start off with a lemma which we use in this section. This lemma will give us a definition for useful pairs that is ``good enough'' for us to use in our analyser. 
 
-\textbf{Lemma 6.1} If $(l, r)$ is a pair of useful terms, then either $l$ and $r$ semi-unify, or $(l, r)$ can be unfolded to a pair of terms $(l', r')$, such that $\textit{root}(l) = \textit{root}(l')$ and $\textit{root}(r') \in \{ \bot, \textit{root}(l) \}$. Where $\textit{root}(r)$ gives us either the function symbol of $r$ if it is a function, or $\bot$ if it is a variable. 
+\textbf{Lemma 6.1} If $(l, r)$ is a pair of useful terms, then either $l$ and $r$ semi-unify, or $(l, r)$ can be unfolded to a pair of terms $(l', r')$, such that $\textit{root}(l) = \textit{root}(l')$ and $\textit{root}(r') \in \{ \textit{type}(l), \textit{root}(l) \}$. Where $\textit{root}(r)$ gives us either the function symbol of $r$ if it is a function, or $\textit{type}(r)$ if it is a variable. 
 
-For a given useful pair of terms $(l, r)$, there are two possibilities: either $l$ and $r$ already semi-unify, or the pair can be unfolded to a pair of terms $(l', r')$ that do semi-unify. In the latter case, we know that $r$ cannot be variable, since it needs at least one step of unfolding. So we say that $r$ is in the form of $f(t_1, \dots, t_n)$. Again, we have two possible ways to go from $r$ to $r'$: 
+This notion of the root of a term is different from the one specified by Payet. We need a different notion to be able to compare types of terms. Payet's definition gave back $\bot$ when applying the root function to a variable. If we would do the same, we lose the information of the type of the variable.
+
+For a given useful pair of terms $(l, r)$, there are two possibilities: 
 \begin{enumerate}
     \itemsep 0em
-    \item There is no step of unfolding at the root position, so $r'$ is in the form of $f(t_1', \dots, t_n')$ and each $t_i$ is unfolded to $t_i'$. 
-    \item There is a step of unfolding at the root position. Here, we first unfold each $t_i$ to a term $t_i'$ to get $f(t_1', \dots, t_n')$. Then we apply a rule $f(s_1, \dots, s_n) \rightarrow r_1$, where $r_1$ will further lead to $r'$. 
+    \item $l$ and $r$ already semi-unify,
+    \item the pair can be unfolded to a pair of terms $(l', r')$ that do semi-unify.
+\end{enumerate} 
+In case 2, we know that $r$ cannot be variable, since it needs at least one step of unfolding. So we say that $r$ is in the form of $f(t_1, \dots, t_n)$. Then we have two possible ways to go from $r$ to $r'$: 
+\begin{enumerate}
+    \itemsep 0em
+    \item[2.1] There is no step of unfolding at the root position, so $r'$ is in the form of $f(t_1', \dots, t_n')$ and each $t_i$ is unfolded to $t_i'$. 
+    \item[2.2] There is a step of unfolding at the root position. Here, we first unfold each $t_i$ to a term $t_i'$ to get $f(t_1', \dots, t_n')$. Then we apply a rule $f(s_1, \dots, s_n) \rightarrow r_1$ where $r_1$ will further lead to $r'$. 
 \end{enumerate}
-We will first look at case 1 where $l$ is not a variable. We know that $r'$ is not a variable, so by lemma 6.1 we know that $\textit{root}(r') = \textit{root}(l)$ so $l$ must be in the form of $f(s_1, \dots, s_n)$. So again by lemma 6.1 we know that $l'$ is in the form $f(s_1', \dots, s_n')$. Now notice that $t_i$ unfolds to $t_i'$ and $s_i'$ semi-unifies with $t_i'$. We thus know that $(s_i, t_i)$ is a useful pair. 
+We will first look at case 2.1 where $l$ is not a variable. We know that $r'$ is not a variable. So by lemma 6.1 we know that $\textit{root}(r') = \textit{root}(l)$ and thus $l$ must be in the form of $f(s_1, \dots, s_n)$. Again by lemma 6.1, we know that $l'$ is in the form $f(s_1', \dots, s_n')$. Now notice that $t_i$ unfolds to $t_i'$ and $s_i'$ semi-unifies with $t_i'$. We thus know that $(s_i, t_i)$ is a useful pair. 
 
-Now we take a look at case 2, also where $l$ is not a variable. We create the following lemma: 
+Now we take a look at the next case: case 2.2, also where $l$ is not a variable. We notice the following: 
 
-\textbf{Lemma 6.2} Take a term $f(t_1, \dots, t_n)$ where each $t_i$ can be unfolded in zero or more steps to $t_i'$. Suppose that for another term $f(s_1, \dots, s_n)$ we have: 
+Let $f(t_1, \dots, t_n)$ be a term where each $t_i$ can unfolded to $t_i'$ in any number of steps. Now suppose we have a term $f(s_1, \dots, s_n)$ such that:
 \[
-\textit{mgu}(f(t_1', \dots, t_n'), f(s_1, \dots, s_n)) \neq \emptyset
+\textit{mgu}(f(t_1', \dots, t_n'), f(s_1, \dots, s_n) \text{ with fresh variables}) \neq \emptyset
 \]
-Then we know that each $t_i$ either unifies with any variable disjoint variant of $s_i$, or $t_i$ can be unfolded in at least one step to some term for which holds that the root of that term is equal to the root of $s_i$ or $\bot$. 
+Then we know that for each argument $t_i$ either:
+\begin{enumerate}
+    \itemsep 0em
+    \item[2.2.1] $t_i$ unifies with any variable disjoint variant of $s_i$, 
+    \item[2.2.2] or $t_i$ can be unfolded in at least one step to some term for which holds that the root of that term is equal to the root of $s_i$ or $\textit{type}(s_i)$. 
+\end{enumerate}  
 
-We also know that the right hand side of the rule we apply to $f(t_1', \dots, t_n')$, $r_1$, has to lead to $r_1$. So using lemma 6.1 we can say that the root symbol of $r_1$ should be equal to the root symbol of $l$ or $\bot$. We define this ``leading to'' as a path in the graph of functional dependencies, defined as follows:
+We also know that the right hand side of the rule we apply to $f(t_1', \dots, t_n')$, $r_1$ (from case 2.2), has to lead to $r'$. So using lemma 6.1 we can say that the root symbol of $r_1$ should be equal to the root symbol of $l$ or $\textit{type}(l)$. We define this ``leading to'' as a path in the graph of functional dependencies as criterion 2.3, defined as follows. 
 
+\subsection*{Graph of Functional Dependencies}
 The graph of functional dependencies is a three-tuple consisting of the rules of $R$, the edges in the graph $E$ and the initial vertices $I$. We denote a functional dependency graph as $G_R = \left< R, E, I \right>$. The following two rules are the algorithm to create the graph from the initial state $\left<R, \emptyset, \emptyset\right>$:
 \[
 \frac{l \rightarrow r \in R}{\left< R, E, I \right> \mapsto \left< R \setminus \{ l \rightarrow r\}, E \cup \{ l \rightarrow \textit{root}(r) \}, I \cup \{ l \} \right>}
 \]
 \begin{center}
-\[
-\frac{ l \rightarrow f \in E \land l' \rightarrow g \in E \land l \in I \land l' \in I \land f \notin I \land g \notin I \land (\textit{root}(l') = f \lor f = \textit{type}(l'))}{\left< R, E, I \right> \mapsto \left< R, E \cup \{ f \rightarrow l' \}, I\right>}
-\]
+\makebox[0cm]{\(
+\begin{array}{c}
+     l \rightarrow f \in E \land l' \rightarrow g \in E \hspace{2pt} \land \\ l \in I \land l' \in I \hspace{2pt} \land \\ (\textit{root}(l') = f \lor f = \textit{type}(l'))  \\ \hline
+     \left< R, E, I \right> \mapsto \left< R, E \cup \{ f \rightarrow l' \}, I\right>
+\end{array}
+\)}
 \end{center}
-Note that this definition differs from the one given in \cite{Payet:Unfolding}. Our definition of the $\textit{root}$ function gives back the type of the term if that term is a variable. In the case where the term is not a variable, it still gives back the function symbol of the term. Also, in the second rule, we check ``$\textit{root}(l') = f \lor f = \textit{type}(l')$''. The second part differs from the existing definition, we cannot just check for some $\bot$, as the variable that created the $\bot$ vertex in the graph might have a different type. This is also why the \textit{root} function can yield a type. This way we can check if it goes to a variable with the correct type. 
+Note that this definition differs from the one given in \cite{Payet:Unfolding}. Our definition of the $\textit{root}$ function gives back the type of the term if that term is a variable. In the case where the term is not a variable it still gives back the function symbol of the term. Also, in the second rule, we check ``$\textit{root}(l') = f \lor f = \textit{type}(l')$''. The second part of this check differs from the existing definition. The definition by Payet for this was ``$\textit{root}(l') = f \lor f = \bot$'', but we cannot just check for some $\bot$ (which was used to define the root of a variable), as the variable that created that $\bot$ vertex in the graph might have a different type. This way we can check if edges do not break typing rules. 
 
-The initial vertices in the graph are exactly the left hand sides of the rules in the input TRS. So a path in $G_R$ from some initial vertex $s$ to a function symbol (or type) $f$ means that for any term $s'$ for which holds that $\textit{mgu}(s, s') \neq \emptyset$, we can unfold $s'$ to a term which root equals $f$. The first step of the unfolding is done at the root position of $s'$. We can now create the following definition for the second case, which started this all.
+\textbf{Example 6.5} \textit{(Example 6.2 continued)}. This example also comes from \cite{Payet:Unfolding}, we will first cover this example and then do the same but with a typed system, as in example 6.4. When we create the graph of functional dependencies from the system, we get:
+\[
+f \longleftrightarrow \underline{f(0, 1, x)} \longleftarrow \alpha \longleftrightarrow \underline{g(x,y)}
+\]
+Note that the initial vertices are $f(0, 1, x)$ and $g(x, y)$ (underlined for clarity). The edge from $f(0, 1, x)$ to $f$ is there because of the first rule. The same holds for the edge from $g(x, y)$ to $\alpha$. The other edges are created with the second rule as follows. The edge $f$ to $f(0, 1, x)$ can be created in the case of $l \rightarrow f \in E = l' \rightarrow g \in E = f(0, 1, x) \rightarrow f$, then $\textit{root}(l') = f$. The edge $\alpha$ to $g(x, y)$ can be created in the case of $l \rightarrow f \in E = l' \rightarrow g \in E = g(x, y) \rightarrow \alpha$, then $f = \textit{type}(l') = \alpha$. The last edge from $\alpha$ to $f(0, 1, x)$ can be created in the case $l \rightarrow f \in E = g(x, y) \rightarrow \alpha$, $l' \rightarrow g \in E = f(0, 1, x) \rightarrow f$, then $f = \textit{type}(l') = \alpha$. 
 
-We create a relation $\xrightarrow[G_R]{+}$. We take as input the graph $G_R$ of a TRS $R$, a term $f(t_1, \dots, t_n)$ and a function symbol (or type) $g$. We can write $f(t_1, \dots, t_n) \xrightarrow[G_R]{+} g$ if there is a path in $G_R$ from an initial vertex in the form of $f(s_1, \dots, s_n)$ to $g$ and, for each $i \in [1, n]$, either of the following holds:
+\textbf{Example 6.6} \textit{(Example 6.5 continued)}. We again type the system created as follows:
+\[
+\begin{array}{rcl}
+    f & :: & \alpha \rightarrow \alpha \rightarrow \alpha \rightarrow \alpha \\
+    0 & :: & \alpha \\
+    1 & :: & \alpha \\
+    g & :: & \beta \rightarrow \beta \rightarrow \beta 
+\end{array}
+\]
+After applying the rules, we get the following graph:
+\[
+f \longleftrightarrow \underline{f(0, 1, x)} 
+\]
+\[
+\beta \longleftrightarrow \underline{g(x,y)}
+\]
+Note how, compared with the previous example, we miss the edge from $\alpha$ to $f(0, 1, x)$. This is because the type of $g$ now is $\beta$, which means that the criterion for creating the edge does not hold anymore. This results in a disconnected graph. 
+
+\subsection*{The Relation $\xrightarrow[G_R]{+}$}
+The initial vertices in the graph are exactly the left hand sides of the rules in the input TRS. So a path in $G_R$ from some initial vertex $s$ to a function symbol (or type) $f$ means that for any term $s'$ for which holds that $\textit{mgu}(s, s') \neq \emptyset$, we can rewrite $s'$, using the rules from the TRS, to a term whose root equals $f$. The first step of the unfolding is done at the root position of $s'$. We can now create the following definition for case 2.2.
+
+We create a relation $\xrightarrow[G_R]{+}$. We take as input the graph $G_R$ of a TRS $R$, a term $f(t_1, \dots, t_n)$ and a function symbol (or type) $g$. We can write $f(t_1, \dots, t_n) \xrightarrow[G_R]{+} g$ if there is a path in $G_R$ from an initial vertex in the form of $f(s_1, \dots, s_n)$ to $g$ (Criterion 2.3) and for each $i \in [1, n]$, either of the following three statements holds:
 \begin{itemize}
     \itemsep 0em
-    \item[-] $\textit{mgu}(t_i, s_i \text{ renamed with fresh variables}) \neq \emptyset$,
-    \item[-] $t_i \xrightarrow[G_R]{+} \textit{root}(s_i)$,
-    \item[-] $t_i \xrightarrow[G_R]{+} \textit{type}(t_i)$
+    \item[-] $\textit{mgu}(t_i, s_i \text{ renamed with fresh variables}) \neq \emptyset$ (Case 2.2.1),
+    \item[-] $t_i \xrightarrow[G_R]{+} \textit{root}(s_i)$ (Case 2.2.2 part 1),
+    \item[-] $t_i \xrightarrow[G_R]{+} \textit{type}(t_i)$ (Case 2.2.2 part 2)
 \end{itemize}
 
-Now we can combine the two cases 1 and two into one definition. We create a relation called $\textit{useful}_R$. Which for any given TRS $R$ and two input terms $l$ and $r$, defines if they are useful for $R$. One of the following conditions have to hold:
+We again have adapted Payet's definition in the third case. The original definition is as follows: $t_i \xrightarrow[G_R]{+} \bot$. Since we used the type of the variable instead of $\bot$ when looking at the root, we have changed this.
+
+\textbf{Example 6.7} (\textit{Example 6.5 continued}). Recall the TRS and functional dependency graph:
+\[
+\begin{array}{lrcl}
+    r_1: & f(0, 1, x) & \rightarrow & f(x, x, x) \\
+    r_2: & g(x, y) & \rightarrow & x \\
+    r_3: & g(x, y) & \rightarrow & y
+\end{array}
+\]
+\[
+f \longleftrightarrow \underline{f(0, 1, x)} \longleftarrow \alpha \longleftrightarrow \underline{g(x,y)}
+\]
+We will look at a number of example whether or not the relationship $\xrightarrow[+]{G_R}$ holds. 
 \begin{itemize}
     \itemsep 0em
-    \item[-] $l$ semi-unifies with $r$,
-    \item[-] $l$ is in the form $f(s_1, \dots, s_n)$, $r$ is in the form $f(t_1, \dots, t_n)$ and for each $i \in [1, n]$, $\textit{useful}_R(s_i, t_i)$,
-    \item[-] $l$ is in the form $f(s_1, \dots, s_n)$, $r$ is in the form $g(t_1, \dots, t_m)$ and $r \xrightarrow[G_R]{+} g$ or $r \xrightarrow[G_R]{+} \textit{type}(r)$
+    \item[-] $g(v, w) \xrightarrow[G_R]{+} \alpha$: this holds, we can take the initial vertex $g(x, y)$, there exists a path from $g(x, y)$ to $\alpha$, and both $\textit{mgu}(v, x)$ and $\textit{mgu}(w, y)$ are non-empty. 
+    \item[-] $g(v, w) \xrightarrow[G_R]{+} f$: this also holds, we again take the initial vertex $g(x, y)$, then there exists a path from $g(x, y)$ to $f$, and both the arguments can unify with $x$ and $y$ respectively. 
+    \item[-] $f(0, 1, x) \xrightarrow[G_R]{+} \alpha$: this does not hold, there does not exist an initial vertex in the form of $f(s_1, s_2, s_3)$ such that there is a path from $f(s_1, s_2, s_3)$ to $\alpha$.
+\end{itemize}
+
+\textbf{Example 6.8} (\textit{Example 6.6 continued}). If we were to use the typed system and do the same checks as in Example 6.7, the second statement ($g(v, w) \xrightarrow[G_R]{+} f$) does not hold anymore. This is because the path from $g(x, y)$ to $f$ is no longer there.
+
+\subsection*{The relation $\textit{useful}_R$}
+We can now capture all of our cases (labelled for clarity) in one definition. We create a relation called $\textit{useful}_R$. Which for any given TRS $R$ and two input terms $l$ and $r$, defines if they are useful for $R$. One of the following conditions has to hold:
+\begin{itemize}
+    \itemsep 0em
+    \item[-] $l$ semi-unifies with $r$ (Case 1),
+    \item[-] $l$ is in the form $f(s_1, \dots, s_n)$, $r$ is in the form $f(t_1, \dots, t_n)$ and for each $i \in [1, n]$, $\textit{useful}_R(s_i, t_i)$ (Case 2.1),
+    \item[-] $l$ is in the form $f(s_1, \dots, s_n)$, $r$ is in the form $g(t_1, \dots, t_m)$ and $r \xrightarrow[G_R]{+} g$ or $r \xrightarrow[G_R]{+} \textit{type}(r)$ (Case 2.2 the sub-cases and the criterion are defined within the $\xrightarrow[G_R]{+}$ definition)
 \end{itemize}
 
 We can use this definition of useful in our abstraction function to be useful as an analyser. 
+
+\textbf{Example 6.9} \textit{(Example 6.4 continued)}. Let us take a look at an example of the abstraction function now that we have a notation for the usefulness of two terms for a TRS. First, recall the TRS, the types and the resulting graph of functional dependencies:
+\[
+\begin{array}{rl}
+\begin{array}{lrcl}
+    r_1: & f(0, 1, x) & \rightarrow & f(x, x, x) \\
+    r_2: & g(x, y) & \rightarrow & x \\
+    r_3: & g(x, y) & \rightarrow & y
+\end{array} &
+\begin{array}{rcl}
+    f & :: & \alpha \rightarrow \alpha \rightarrow \alpha \rightarrow \alpha \\
+    0 & :: & \alpha \\
+    1 & :: & \alpha \\
+    g & :: & \beta \rightarrow \beta \rightarrow \beta 
+\end{array}
+\end{array}
+\]
+\[
+f \longleftrightarrow \underline{f(0, 1, x)} 
+\]
+\[
+\beta \longleftrightarrow \underline{g(x,y)}
+\]
+Also recall the abstraction function:
+\[
+\begin{array}{c}
+\alpha(R) = \bigcup\limits_{l \rightarrow r \in R} \{\alpha_R(l, \left.r\right|_p) \mid p \in \textit{Pos}(r) \land \textit{type}(l) = \textit{type}(\left.r\right|_p)\} \\
+\alpha_R(l, r) =
+\left\{
+    \begin{array}{ll}
+        \texttt{true} & \text{if } (l, r) \text{ semi-unify}\\
+        (l, r) & \text{if } (l, r) \text{ is useful for } R\\
+        \texttt{false} & \text{otherwise}
+    \end{array}
+\right.
+\end{array}
+\]
+We will apply the abstraction function to the TRS with rules $r_1$ through $r_3$. First take the rule $r_1 : f(0, 1, x) \rightarrow f(x, x, x)$. The right side of this rule has two unique positions, namely $\epsilon$ and $1.\epsilon$. For these two positions we will apply the $\alpha_R(l, \left.r\right|_p)$ function.
+\begin{itemize}
+    \itemsep 0em
+    \item[-] $\epsilon$: First we check if $(f(0, 1, x), f(x,x,x)$ semi-unify, which is not the case. Then we have to check if this tuple is useful for $R$, then either the terms need to semi-unify, which they do not, or each subterm needs to be useful for $R$. This does hold, since $0$ semi-unifies with $x$, $1$ semi-unifies with $x$ and $x$ semi-unifies with $x$. We get $\alpha_R(f(0, 1, x), f(x,x,x)) = (f(0, 1, x), f(x,x,x))$.
+    \item[-] $1.\epsilon$: Again, we first check if $(f(0, 1, x), x)$ semi-unify, which is not the case. Then in our check for usefulness, we note that the we can only do the first check, since $x$ is not in the form of $f(s_1, \dots, s_n)$. This first check is semi-unification, which we already checked and resulted negatively. So we get $\alpha_R(f(0, 1, x), x) = \texttt{false}$.
+\end{itemize}
+Now we will look at the second rule $r_2$, this rule only has one position on the right hand side: $\epsilon$.
+\begin{itemize}
+    \itemsep 0em
+    \item[-] $\epsilon$: We first check if $(g(x, y), x)$ semi-unify, which fails. Then we go to the second case and check if the terms are useful for $R$. The first check of semi-unification obviously fails. The second and third check again require the terms to not be variables, which is not the case, so we get $\alpha_R(g(x,y), x) = \texttt{false}$.
+\end{itemize}
+The third rule $r_3$ is much like the second rule, again we have one position on the right hand side: $\epsilon$. The checks for this rule in the abstraction function are the same and get the same result. So we also get $\alpha_R(g(x,y), y) = \texttt{false}$.
+
+\noindent The only useful rule we got is $f(0, 1, x) \rightarrow f(x,x,x)$. If we were to analyse this further, we first have to look at if there already is a non-variable position on the right hand side that semi-unifies with the left hand side. This is not the case as the only non-variable position on the right hand side is $f(x, x, x)$. In the unfolding operator we take this rule, then choose a non-variable right hand side position (so $f(x,x,x)$). Then we have to find a rule in the original TRS $l' \rightarrow r'$ (with fresh variables) for which holds that $\textit{mgu}(f(x,x,x), l') \neq \emptyset$. The only rule that could be used keeping types in account, is $f(0, 1, x') \rightarrow f(x', x', x')$. And this does not work as we cannot unify $f(x,x,x)$ and $f(x', x', x')$. This means that we have no rules left and the analyser failed in detecting non-termination. 

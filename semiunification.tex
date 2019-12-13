@@ -1,9 +1,15 @@
 \chapter{Semi Unification}\label{semi-unification}
-Semi-unification is yet another way to detect non-termination. As its name suggests, it is somewhat like unification. It is actually a technique that encompasses both matching and unification. If we take two terms $t_1$ and $t_2$, matching creates a substitution $\rho$ such that $\rho(t_1) = t_2$ and unification creates a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. If we combine these, we get semi-unification: define two substitutions $\rho$ and $\sigma$, such that $\rho(\sigma(t_1)) = \sigma(t_2)$. It is clear that this supports both matching (take $\sigma = \emptyset$) and unification (take $\rho = \emptyset$). 
+Semi-unification is yet another way to detect non-termination. As its name suggests, it is somewhat like unification. It is actually a technique that encompasses both matching and unification. If we take two terms $t_1$ and $t_2$, matching creates a substitution $\rho$ such that $\rho(t_1) = t_2$ and unification creates a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. If we combine these, we get semi-unification:
+
+\begin{definition}
+Given two terms $t_1$ and $t_2$, $t_1$ and $t_2$ semi-unify if we can create two substitutions $\rho$ and $\sigma$ such that $\rho(\sigma(t_1)) = \sigma(t_2)$.
+\end{definition}
+
+It is clear that this encompasses both matching (take $\sigma = \emptyset$) and unification (take $\rho = \emptyset$). 
 
 Semi-unification can detect non-termination of term rewriting rules, but also has other use cases, for example in type inference in Milner-Mycroft calculus\cite{Henglein:1988}. This calculus is used in some polymorphic functional programming languages. In the general case, semi-unification is undecidable\cite{KFOURY:1993}. In our case we are dealing with two input terms, for which semi-unification \textit{is} decidable.
 
-The notion of semi-unification just above is actually called left-unification. Right-unification can be calculated using left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification.
+The notion of semi-unification above is actually called left-unification. Right-unification can be calculated using left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification.
 
 An algorithm to compute semi-unification for two input terms is given in for example Kapur et al\cite{SemiUnification}. In the same paper a proof is also given how semi-unification can detect non-termination:
 

@@ -1,6 +1,21 @@
 \chapter{Conclusions}\label{conclusions}
-In this chapter you present all conclusions that can be drawn from the
-preceding chapters.
-It should not introduce new experiments, theories, investigations, etc.:
-these should have been written down earlier in the thesis.
-Therefore, conclusions can be brief and to the point.
+We have to look at two separate points in our conclusions. First off, we adapted a number of techniques to work for many-sorted rewriting systems. The second point we can look at is how it performs on examples. 
+\section{Adaptations}
+The main techniques we have adapted to work for many-sorted term rewriting systems are Concrete unfolding and Abstract unfolding. The impact that the sorts made on the techniques were small but certainly not negligible. Most of the adaptations made were extra checks for types, for example when substituting some position with another term. 
+
+Apart from the extra type checks, there have been more changes. For example in the graph of functional dependencies, where the definition had to be altered altogether to make it work for types.
+
+\section{Experiments}
+The results from the experiments are consistent. It is clear that choosing semi-unification instead of unification is always a good idea. Semi-unification finds about 50\% more systems that are non-terminating in about the same time. However, the comparison on the total time is not completely fair. Since unification finds less non-terminating systems, it more often needs to go on for the entire timeout limit (or until the analysis is done). 
+
+The most important observation we can make is that augmenting the term rewriting system as a pre-processing step is expensive. But still worthwhile, we have already seen an example where not augmenting would result in a \texttt{MAYBE} result but with augmenting we were able to find a loop. This occurs many more times in systems we have analysed. In the results of the abstract analyser we find more non-terminating TRSs when augmenting (123 instead of 117). But there are also systems where augmenting would result in a timeout and not augmenting \textit{would} find the non-termination.
+
+Comparing the abstract unfolding and concrete unfolding matches expectations. There is no example where the concrete unfolder \textit{was} able to find non-termination and where the abstract unfolder gave back \texttt{MAYBE}. There are cases, however, where the abstract unfolder timed out and the concrete unfolder was able to find non-termination. Over-all the abstract unfolder detected more cases of non-termination. 
+
+There is one special example, using the concrete unfolder and by not augmenting the system as a pre-processing step, we were able to detect non-termination in an example where the other tools in the most recent termination competition were not. It is \texttt{Zantema\_15\char`\\s.xml} from the Termination Problem Data Base. It is the following TRS:
+\[
+\begin{array}{lrcl}
+    r_1: & a(a(a(S, x), y), z) & \rightarrow & a(a(x, z), a(y, z)) 
+\end{array}
+\]
+Non-termination is proven by unfolding on the positions in the following order: $\epsilon$, $2.\epsilon$, $2.2.\epsilon$, $2.2.2.\epsilon$ and finally $2.2.2.2.\epsilon$. Then semi-unification is possible between the left hand side and position $1.\epsilon$ on the right hand side. 

@@ -4,24 +4,40 @@ Before we can talk about the non-termination of term rewriting systems, we first
 \subsection{Term Rewriting System}
 Intuitively, a term rewriting system (TRS) is a set of rewriting rules that can be applied on terms. More formally it can be seen as a tuple containing an alphabet ($\Sigma$) and a set of rewriting rules ($R$). $\Sigma$ typically contains an infinite set of variables ($\mathcal{V}$) combined with a set of function symbols ($\mathcal{F}$). Every function symbol has an arity, which is the number of arguments it takes. The arity may be zero, in which case it can also be seen as a constant term.  
 
-We can define the possible terms in an alphabet $\Sigma$ as $\textit{Ter}\left(\Sigma\right)$. This set firstly contains the variables in $\Sigma$. Secondly, any function of which all its arguments are in $\textit{Ter}\left(\Sigma\right)$, is also added to the set.
+We define the possible terms in an alphabet $\Sigma$ as $\textit{Ter}\left(\Sigma\right)$. This set firstly contains the variables in $\Sigma$. Secondly, any function in $\Sigma$ of which all its arguments are in $\textit{Ter}\left(\Sigma\right)$, is also added to the set. More formally: 
+\begin{definition}
+The set $\textit{Ter}\left(\Sigma\right)$ is inductively defined as follows:
+\begin{itemize}
+    \itemsep -0.5em
+    \item[-] each variable $v \in \mathcal{V}$ is in $\textit{Ter}\left(\Sigma\right)$
+    \item[-] if $f \in \Sigma$ has arity $n$ and $s_1, \dots, s_n$ are in $\textit{Ter}\left(\Sigma\right)$, then $f(s_1, \dots, s_n) \in \textit{Ter}(\Sigma)$
+\end{itemize}
+\end{definition}
 
 Positions can be seen as subterms within a term. We define these positions by $\textit{Pos}\left(t\right)$ where $t \in \textit{Ter}\left(\Sigma\right)$:
+\begin{definition}
 $$
 \textit{Pos}(t) = \left\{\begin{array}{ll}
         \left\{\epsilon\right\}, & \text{if } t \in \mathcal{V}\\
         \left\{\epsilon\right\} \cup \{i.p \mid 1 \leq i \leq n \text{ and } p  \in \textit{Pos}(t_i)\} , & \text{if } t = f(t_1, \dots, t_n)
         \end{array}\right.
 $$
+\end{definition}
 We say $\left.t\right|_p$ when we want to indicate the position $p$ within term $t$. The identity case is $\left.t\right|_\epsilon = t$.
 
-Substitutions are mappings from terms to terms, they only apply to variables. This means that a substitution applied to a function symbol is equal to a substitution applied to the arguments of the function symbol separately.
+Substitutions are mappings from variables to terms, they only apply to variables. This means that a substitution applied to a function symbol is equal to a substitution applied to the arguments of the function symbol separately:
+\begin{definition}
+A substitution is a mapping $\sigma = \{ t_1 \leftarrow v_1, \dots, t_n \leftarrow v_n \}$ ($\{ v_1, \dots, v_n \} \subseteq \mathcal{V}$, $\{ t_1, \dots, t_n\} \subseteq \textit{Ter}(\Sigma)$), which, when applied to a term, replaces all instances in the term of $v_i$ with $t_i$.
+\end{definition}
 
 \textbf{Example 2.1}: Suppose we have variables $\{ x, y \} \subseteq \mathcal{V}$ and function symbols $\mathcal{F} = \{ f, g, 0\}$ with arities of 2, 1 and 0 respectively. With these variables and function symbols we can create an alphabet $\Sigma = \mathcal{V} \cup \mathcal{F}$, then we can create terms from $\textit{Ter}(\Sigma)$. Possible terms are $t_1 = x$, $t_2 = 0$, $t_3 = f(x, y)$, $t_4 = g(f(0, x))$. Positions of these terms are as follows: $\textit{Pos}(t_1) = \{ \epsilon \}$, $\textit{Pos}(t_2) = \textit{Pos}(t_1), \textit{Pos}(t_3) = \{ \epsilon, 1.\epsilon, 2.\epsilon \} \text{ and }\textit{Pos}(t_4) = \{ \epsilon, 1.\epsilon, 1.1.\epsilon, 1.2.\epsilon \}$. We can for example take $\left. t_3\right|_{2.\epsilon} = y$.
 
 \textbf{Example 2.2}: \textit{Continuation of example 2.1}. Let us say we want to create a substitution $\sigma_1 = \{ x \leftarrow 0, y \leftarrow g(y) \}$. We can apply this substitution to terms as follows: $\sigma_1(t_1) = \sigma_1(t_2) = 0$, $\sigma_1(t_3) = f(\sigma_1(x), \sigma_1(y)) = f(0, g(y))$ and $\sigma_1(t_4) = g(\sigma_1(f(0, x))) = g(f(0, \sigma_1(x))) = g(f(0, 0))$.
 
-Rewrite rules are written as follows: $r_i : l \rightarrow r$ where $l$ and $r$ are terms in $\textit{Ter}(\Sigma)$. $r_i$ is optional and a name for the rule. $l$ must be a non-variable term. Also, if $\textit{Var}(t)$ defines the variables in term $t$, then $\textit{Var}(r) \subseteq \textit{Var}(l)$. That is, variables on the right hand side (RHS) must also occur in the left hand side (LHS).
+We can now create a notion for rewrite rules. These rules have a left and right side, the left side cannot be a variable, otherwise the rule can be applied to any term. Also, the right side cannot contain any variables that do not exist on the left side. This is because otherwise, the variable cannot be given a value when applying the rule.
+\begin{definition}
+A rewrite rule is defined as $r_i : l \rightarrow r$. Here, $l$ and $r$ are terms in $\textit{Ter}(\Sigma)$. $r_i$ is an optional name for the rule. Furthermore, $l$ cannot be a variable and if $\textit{Var}(t)$ defines the variables in a term $t$, $\textit{Var}(r) \subseteq \textit{Var}(l)$. 
+\end{definition}
 
 \textbf{Example 2.3}: \textit{Continuation of example 2.1}. We can now create rules from the terms we have defined:\newline
 $$
@@ -47,9 +63,28 @@ Just as we just showed how function arguments may not be functions themselves, v
 \subsubsection{Rewriting system}
 We do not need to change many of the previous definitions, we just need to make sure that every element of the alphabet gets a type and that all operations defined are not allowed to break the typing. For example, a term of type $\alpha$ may not be substituted with one of type $\beta$.
 
-We define the alphabet of a many-sorted TRS as $\Sigma$, containing the set of variables $\mathcal{V}$ and the set of function symbols $\mathcal{F}$ as before. Now we extend this by saying that every element of $\mathcal{V}$ has a first-order type $\tau$. The function symbols in $\mathcal{F}$ are extended such that every element is of the form $F(x_1, \dots, x_n)$ with $n \in \mathbb{N} + \{0\}$, where $F$ has an output type $\tau_0$ and every $x_i$ with $1 \leq i \leq n$ has a first-order type $\tau_i$. 
+We define the alphabet of a many-sorted TRS as $\Sigma$, containing the set of variables $\mathcal{V}$ and the set of function symbols $\mathcal{F}$ as before. Now we extend this by saying that every variable has a first-order type. The function symbols are extended such that every function gets first-order types as well. 
+\begin{definition}
+The alphabet $\Sigma$ of a many sorted TRS is defined as follows:
+\begin{itemize}
+    \itemsep -0.4em
+    \item[-] each variable $v \in \mathcal{V}$ is in $\Sigma$
+    \item[-] each function $f \in \mathcal{F}$ is in $\Sigma$
+    \item[\bf-] each variable $v \in \mathcal{V}$ has a type $\tau$
+    \item[\bf-] each function $f \in \mathcal{F}$ in the form $f(s_1, \dots, s_n)$ with arity $n$ has type $\tau_1 \rightarrow \dots \rightarrow \tau_{n+1}$
+\end{itemize}
+\end{definition}
 
-As explained above, we also need to make sure that when using substitutions, both sides of the substitution have the same type $\tau$. When it comes to rules, it is much like the case in the substitutions, both sides of the rules must have the same type $\tau$.
+As previously explained, we also need to make sure that when using substitutions, both sides of the substitution have the same type. When it comes to rules, it is much like the case in the substitutions, both sides of the rules must have the same type.
+\begin{definition}
+A substitution is a mapping $\sigma = \{ t_1 \leftarrow v_1, \dots, t_n \leftarrow v_n \}$ ($\{ v_1, \dots, v_n \} \subseteq \mathcal{V}$, $\{ t_1, \dots, t_n\} \subseteq \textit{Ter}(\Sigma)$), which, when applied to a term, replaces all instances in the term of $v_i$ with $t_i$.  
+
+If $\textit{Type}(t)$ gives the type of a term, then $\textit{Type}(t_i) = \textit{Type}(v_i)$ for all $i \in [ 0, n ]$.
+\end{definition}
+
+\begin{definition}
+A rewrite rule in a many-sorted TRS is defined as $r_i : l \rightarrow r$. Here, $l$ and $r$ are terms in $\textit{Ter}(\Sigma)$. $r_i$ is an optional name for the rule. Furthermore, $l$ cannot be a variable and if $\textit{Var}(t)$ defines the variables in a term $t$, $\textit{Var}(r) \subseteq \textit{Var}(l)$ and \textbf{$\textit{Type}(l) = \textit{Type}(r)$}. 
+\end{definition}
 
 \textbf{Example 2.4}: Let us create an alphabet $\Sigma$ consisting of the variables $\mathcal{V} = \{ x, y\}$, the types of these variables are as follows: $x$ has type $\alpha$ and $y$ has type $\beta$. Now we create the set of function symbols $\mathcal{F} = \{ f, g, b \}$. $f$ has type $\alpha \rightarrow \alpha \rightarrow \beta$, $g$ has type $\beta \rightarrow \alpha$ and $b$ is of type $\beta$. Substitutions such as $\sigma_1 = \{ b \leftarrow y \}$ and $\sigma_2 = \{ f(x, g(b)) \leftarrow y \}$ are possible, but we cannot create a substitution like $\sigma_2 = \{ x \leftarrow y \}$, since the type of $x$ ($\alpha$) does not match the type of $y$ ($\beta$).
 
@@ -63,15 +98,27 @@ This rule is correctly typed as the output type of $f$ is $\beta$ and the type o
 
 \section{Unifiers}
 Previously, we have already seen what substitutions are. An example use case for substitutions is unification. A unifier of two terms is a substitution $\sigma$ such that, when applied to two (or more) terms, the resulting terms are all equal. 
+\begin{definition}
+Given two terms $t_1$ and $t_2$, a unifier $\sigma$ is a substitution such that $\sigma(t_1) = \sigma(t_2)$.
+\end{definition}
 
 \textbf{Example 2.5} \textit{We will omit types in this example}. Let us take two terms $t_1 = f(g(x), y)$ and $t_2 = f(z, g(z))$. To unify these two terms, we can use a unifier $\sigma_1 = \{ g(z) \leftarrow y, g(x) \leftarrow z \}$.
 
 \section{Most General Unifiers}
-We will now look at what happens when we apply multiple substitutions on one term. If we have multiple substitutions to apply to $t$, for example $\sigma_1$ and $\sigma_2$, we denote it as $t\sigma_1\sigma_2$. If we see the substitution as a function we can write $\sigma_2\left( \sigma_1(t)\right)$.
+We will now look at what happens when we apply multiple substitutions on one term. If we have multiple substitutions to apply to $t$, for example $\sigma_1$ and $\sigma_2$, we denote it as $t\sigma_1\sigma_2$. If we see the substitution as a function we can write $\sigma_2\left( 
+\sigma_1(t)\right)$.
 
 \textbf{Example 2.6}: \textit{We will omit types in this example}. Let us take a term $t = f(x, g(y))$ and substitutions $\sigma_1 = \{ f(x, x) \leftarrow x\}$, $\sigma_2 = \{ y \leftarrow x, 0 \leftarrow y \}$. If we want to know $t\sigma_1\sigma_2$, or equivalently, $\sigma_2(\sigma_1(t))$, we can first take $t\sigma_1 = f(f(x, x), g(y))$. Then from there we apply $\sigma_2$, which brings us to $\sigma_2(f(f(x, x), g(y))) = f(f(x, x), g(0))$.
 
-We can also create a definition for a most general unifier, often denoted as a function $\textit{mgu}(s, t)$. A unifier $\sigma$ is the most general unifier of two terms $s$ and $t$, if it unifies $s$ and $t$, and given any other unifier $\omega$ of these terms, $\omega$ can be created using a substitution $\omega_1$ on $\sigma$.
+We can also create a definition for a most general unifier, often denoted as a function $\textit{mgu}(s, t)$. A unifier $\sigma$ is the most general unifier of two terms $s$ and $t$, if it unifies $s$ and $t$, and given any other unifier of these terms, this can be created using a substitution on $\sigma$:
+\begin{definition}
+Given two terms $t_1$ and $t_2$, a most general unifier $\sigma$ is a substitution such that:
+\begin{itemize}
+    \itemsep -.4em
+    \item[-] $\sigma$ unifies $t_1$ and $t_2$
+    \item[-] given any other unifier $\sigma'$ that unifies $t_1$ and $t_2$, $\sigma'$ can be created using a substitution $\omega$ on $\sigma$
+\end{itemize}
+\end{definition}
 
 \textbf{Example 2.7}: \textit{We will omit types in this example}. Take terms $s = f(x, h(y, z))$ and $t = f(z, h(0, x))$, it is clear that we can create a substitution that will unify these terms: $\sigma_1 = \{ z \leftarrow x, 0 \leftarrow y \}$, then $s\sigma_1 = t\sigma_1$. This substitution is also the most general unifier of these terms. To show this we can take another substitution $\sigma_2 = \{ f(x, x) \leftarrow x, f(x, x) \leftarrow z, 0 \leftarrow y \}$. Note that we can create $\sigma_2$ using $\sigma_1$: $\sigma_2 = \sigma_1\omega_1$, take $\omega_1 = \{ f(x, x) \leftarrow z\}$.
 

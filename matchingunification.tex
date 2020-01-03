@@ -1,24 +1,18 @@
 \chapter{Matching and Unification}\label{matching-unification}
-The first non-termination detection techniques we will look at are matching and unification. These two techniques have the same core idea, namely to check for all the rules if the left side matches or unifies with any non-variable position on the right side. We will see that if this is the case, we can already state non-termination of the rewriting system.
+The first non-termination detection techniques we will look at are matching and unification. These two techniques have the same core idea, namely to check for all the rules if the left side matches or unifies with any non-variable position on the right side. We will see that if this is the case, we can already conclude non-termination of the rewriting system.
 
 \section{Matching}
 Unlike unification, we have not looked at matching yet. Matching can be seen as a more restricted form of unification. A term $t_1$ matches with another term $t_2$, if there exists a substitution $\sigma_1$ such that $\sigma_1(t_1) = t_2$. Instead of applying the substitution to both terms, it only is applied to one.
 
-Matching can be used to detect non-termination, if for some rule, the left side matches a non variable subterm on the right, we know it is non-terminating. This is because we can repeatedly apply the rule on the chosen subterm.
+Matching can be used to detect non-termination, if for some rule, the left side matches with a non variable subterm on the right, we know it is non-terminating. This is because we can repeatedly apply the rule on the chosen subterm.
 
-\textbf{Example 4.1}: Take the rule $r_1: f(x) \rightarrow g(1, f(h(x)))$, we can take the subterm $t_1 = f(h(x))$ and check if there is a $\sigma_1$ for which holds that $\sigma_1(f(x)) = f(h(x))$. Choose $\sigma_1 = \{ h(x) \leftarrow x \}$ and this holds. So we conclude that $r_1$ is non-terminating. 
+\textbf{Example 4.1}: Consider the rule $r_1: f(x) \rightarrow g(1, f(h(x)))$. We can take the subterm $t_1 = f(h(x))$ and check if there is a $\sigma_1$ for which holds that $\sigma_1(f(x)) = f(h(x))$. Choose $\sigma_1 = \{ h(x) \leftarrow x \}$ and this holds. The infinite reduction then looks like (for example) $f(1) \rightarrow_R g(1, f(h(1))) \rightarrow_R g(1, g(1, f(h(h(1))))) \rightarrow_R \dots$. So we conclude that $r_1$ is non-terminating. 
 
 Cora already has matching built into it since it is also required to check if a rule can be applied to a term. Note that when applying a rule, you match the left hand side of the rule with the term you want to apply it on, and finally apply the resulting substitution on the right hand side of the rule.
 
-The algorithm to match two terms is given in Algorithm \ref{matching} on page \pageref{matching}. Note that this algorithm does not mention any types. It is trivial to include the types, however. We just need to make sure that in every comparison, the types are also checked:
-\begin{enumerate}
-    \itemsep0em
-    \item Between lines 2 and 3 a check needs to be done to compare the types of $t_1$ and $t_2$,
-    \item If the \texttt{if} statement at line 4 holds, then we still need to check if the types of $\sigma(t_1)$ and $t_2$ match,
-    \item Comparison of terms need to include type checking (e.g. in line 4),
-    \item Comparison of function symbols need to include type checking (e.g. in line 14).
-\end{enumerate}
-As noted above, the matching algorithm (including the type checks) was already built into Cora, but it was not implemented as an analyser yet. Now it is, though, called the \texttt{MatchingAnalyzer}. 
+The algorithm to match two terms is given in Algorithm \ref{matching} on page \pageref{matching}. This is the algorithm as implemented in Cora. Note that this algorithm does not mention any types. The type checks are embedded in comparisons between terms. 
+
+As noted above, the matching algorithm (including the type checks) was already built into Cora, but it was not implemented as an analyser yet. Now it is, though, called the \texttt{MatchingAnalyser}. 
 
 \begin{algorithm}
 \caption{Matching}
@@ -28,7 +22,7 @@ As noted above, the matching algorithm (including the type checks) was already b
 \IF {$t_1$ is a variable}
   \IF {$\sigma$ contains $t_1$}
     \IF {$\sigma(t_1) \neq t_2$}
-      \RETURN Failure
+      \STATE \textbf{throw} Failure
     \ENDIF
   \ELSE
     \STATE $\sigma(t_1) = t_2$
@@ -37,7 +31,7 @@ As noted above, the matching algorithm (including the type checks) was already b
   \IF {$t_2$ is a variable}
     \RETURN Failure
   \ELSIF {$t_2$ is in the form of $g(y_1, \dots, y_m)$, $m$ being the arity of $g$}
-    \IF {$f \neq g$ \OR $m \neq n$}
+    \IF {$f \neq g$}
       \RETURN Failure
     \ENDIF
     \FORALL {$i \in \left[1, n\right]$}
@@ -49,10 +43,9 @@ As noted above, the matching algorithm (including the type checks) was already b
 \end{algorithm}
 
 \section{Unification}
-Similarly to matching, we can also apply unification to detect non-termination of term rewriting systems. Recall that unification of two terms $t_1$ and $t_2$ is possible when we can find a $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. We know that if the left hand side of a rule unifies with some non variable subterm of the right hand side, the TRS is non-terminating.\newline
-Suppose that we have a rule $r_1: t_1 \rightarrow t_2$, and that there is some non-variable subterm $t_2'$ of $t_2$ and that there is a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2')$. We can now create an infinite loop: apply $r_1$ to $\sigma(t_1)$, then apply $r_1$ to the result of that and repeat this process\dots.
+Similarly to matching, we can also apply unification to detect non-termination of term rewriting systems. Recall that unification of two terms $t_1$ and $t_2$ is possible when we can find a $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. We know that if the left hand side of a rule unifies with some non variable subterm of the right hand side, the TRS is non-terminating, for the following reason: suppose that we have a rule $r_1: l \rightarrow r$, and that there is some non-variable subterm $r'$ of $r$ and that there is a substitution $\sigma$ such that $\sigma(l) = \sigma(r')$. We can now create an infinite loop: apply $r_1$ to $\sigma(l)$, then apply $r_1$ to the result of that and repeat this process\dots.
 
-\textbf{Example 4.2}: Take the rule $r_1: f(g(x), z, y) \rightarrow f(y, g(x), y)$. To try to unify the left side with some non-variable subterm on the right, the most sensible subterm to choose is the entire right side. We can unify these two sides by taking $\sigma = \{ g(x) \leftarrow y, g(x) \leftarrow z \}$. If we apply $r_1$ to $\sigma(f(g(x), z, y)) = f(g(x), g(x), g(x))$, we get $f(g(x), g(x), g(x))$ back, which can immediately be applied to $r_1$ again, this clearly keeps looping indefinitely.
+\textbf{Example 4.2}: Take the rule $r_1: f(g(x), z, y) \rightarrow f(y, g(x), y)$. To try to unify the left side with some non-variable subterm on the right, the most sensible subterm to choose is the entire right side. We can unify these two sides by taking $\sigma = \{ g(x) \leftarrow y, g(x) \leftarrow z \}$. If we apply $r_1$ to $\sigma(f(g(x), z, y)) = f(g(x), g(x), g(x))$, we get $f(g(x), g(x), g(x))$ back, which can immediately be applied to $r_1$ again; this clearly keeps looping indefinitely.
 
 Implementing the unification algorithm that works for many-sorted terms does not require many adaptations from an existing algorithm such as the one from Martelli and Montanari.\cite{Martelli:1982} The algorithm in pseudocode can be found in Algorithm \ref{unification} on page \pageref{unification}. Unlike earlier, type checks are included, but they are not explicitly noted in the comparison between terms and function symbols (e.g. lines 4 and 24).  
 
@@ -67,32 +60,41 @@ Implementing the unification algorithm that works for many-sorted terms does not
       \IF {Type of $t_1 \neq$ type of $t_2$}
         \RETURN Failure
       \ELSE
-        \STATE $\sigma(t_2) = t_1$
+        \RETURN $\sigma(t_2) = t_1$
       \ENDIF
+    \ELSE
+      \RETURN $\sigma$
     \ENDIF
   \ELSE
-    \RETURN unify $t_2$, $t_1$ using $\sigma$
+    \RETURN unify $t_2$, $t_1$
   \ENDIF
-\ELSIF {$t_1$ is in the form of $f(x_1, \dots, x_n)$, $n$ being the arity of $f$}
+\ELSIF {$t_1$ is in the form of $f(s_1, \dots, s_n)$, $n$ being the arity of $f$}
   \IF {$t_2$ is a variable}
-    \IF {$t_1$ contains $t_2$}
-      \RETURN Failure
-    \ELSIF {Type of $t_1 \neq$ type of $t_2$}
+    \IF {$t_1$ contains $t_2$ \OR type of $t_1 \neq$ type of $t_2$}
       \RETURN Failure
     \ELSE 
-      \STATE $\sigma(t_2) = t_1$
+      \RETURN $\sigma(t_2) = t_1$
     \ENDIF
-  \ELSIF {$t_2$ is in the form of $g(y_1, \dots, y_m)$, $m$ being the arity of $g$}
-    \IF {$f \neq g$ \OR $m \neq n$}
+  \ELSIF {$t_2$ is in the form of $g(u_1, \dots, u_m)$, $m$ being the arity of $g$}
+    \IF {$f \neq g$}
       \RETURN Failure
     \ENDIF
     \FORALL {$i \in \left[1, n\right]$}
-      \STATE unify $x_i$ with $y_i$ using $\sigma$
-      \STATE update replacements in $\sigma$ using the just added terms to it
+      \STATE $\gamma$ = unify $\sigma(s_i)$ with $u_i$
+      \FORALL {Variable $v$ in domain of $\gamma$ }  
+        \IF {$v$ in domain of $\sigma$ \AND $\sigma(v) \neq \gamma(v)$}
+          \RETURN Failure
+        \ELSE
+          \STATE $\sigma(v) = \gamma(v)$
+        \ENDIF
+      \ENDFOR
+      \STATE $\sigma(x) = \gamma(\sigma(x))$ for each x in domain of $\gamma$
+      \STATE $t_2$ := $\sigma(t_2)$
     \ENDFOR
+    \RETURN $\sigma$
   \ENDIF
 \ENDIF
 \end{algorithmic}
 \end{algorithm}
 
-This algorithm is implemented and can be used in an analyser. The only thing the analyser needs to do is check for every rule, if the left side unifies with some non-variable subterm of the right hand side. This is implemented in the \texttt{UnificationAnalyzer}.
+This algorithm is implemented and can be used in an analyser. The only thing the analyser needs to do is check for every rule, whether the left side unifies with some non-variable subterm of the right hand side. This is implemented in the \texttt{UnificationAnalyser}.

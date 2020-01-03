@@ -9,38 +9,46 @@ It is clear that this encompasses both matching (take $\sigma = \emptyset$) and 
 
 Semi-unification can detect non-termination of term rewriting rules, but also has other use cases, for example in type inference in Milner-Mycroft calculus\cite{Henglein:1988}. This calculus is used in some polymorphic functional programming languages. In the general case, semi-unification is undecidable\cite{KFOURY:1993}. In our case we are dealing with two input terms, for which semi-unification \textit{is} decidable.
 
-The notion of semi-unification above is actually called left-unification. Right-unification can be calculated using left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification.
+The notion of semi-unification above is actually called left-unification. Right-unification can be calculated using an algorithm for left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification. In the case for non-termination we use left-unification, this is also what we further speak of semi-unification.
 
 An algorithm to compute semi-unification for two input terms is given in for example Kapur et al\cite{SemiUnification}. In the same paper a proof is also given how semi-unification can detect non-termination:
 
-The idea is the same as with matching and unification, we will try to semi-unify the left hand side of a rule with some non-variable subterm on the right hand side. Suppose we have some rule $r_1: l \rightarrow r$. And $r'$ is a non-variable subterm of $r$. Now say that semi-unification is successful on $r'$, such that $\rho(\sigma(l)) \rightarrow \sigma(r')$. If we were to apply both the substitutions on the rule $r_1$ we would get $r_1': \rho(\sigma(l)) \rightarrow \rho(\sigma(r))$, for which we know there is some subterm $\rho(\sigma(r'))$ of $\rho(\sigma(r))$. This subterm is in its place equal to $\rho(\rho(\sigma(l)))$, because of the substitution we started with. Now we can rewrite this term to $\rho(\rho(\sigma(r)))$ and further repeat the last two steps indefinitely.
+The idea is the same as with matching and unification, we will try to semi-unify the left hand side of a rule with some non-variable subterm on the right hand side. Suppose we have some rule $r_1: l \rightarrow r$. And $r'$ is a non-variable subterm of $r$. Now say that semi-unification is successful on $r'$, such that $\rho(\sigma(l)) = \sigma(r')$. If we were to apply both the substitutions on the rule $r_1$ we would get $r_1': \rho(\sigma(l)) \rightarrow \rho(\sigma(r))$, for which we know there is some subterm $\rho(\sigma(r'))$ of $\rho(\sigma(r))$. This subterm is in its place equal to $\rho(\rho(\sigma(l)))$, because of the substitution we started with. Now we can rewrite this term to $\rho(\rho(\sigma(r)))$ and further repeat the last two steps indefinitely.
 
-We will implement the algorithm described by Kapur et al for many-sorted term rewriting systems. The implementations are two separate algorithms, the first algorithm is sufficient to decide semi-unifiability, and as a result will generate a set of rewriting rules. But to obtain the substitutions, we need the second algorithm, it takes as an input the result from the first algorithm, then extracts the solution from it.
+We will implement the algorithm described by Kapur et al for many-sorted term rewriting systems. The implementations are two separate algorithms. The first algorithm is sufficient to decide semi-unifiability, and as a result will generate a set of rewriting rules. But to obtain the substitutions, we need the second algorithm, it takes as an input the result from the first algorithm, then extracts the solution from it.
 
 \section{Algorithm 1}
-In the algorithm we will be looking for two substitutions $\sigma$ and $\rho$, such that for two terms $t_1$ and $t_2$, $\rho(\sigma(t_1)) = \sigma(t_2)$. To represent the $\sigma$ substitution, we use some special variables noted as $s_x$, this is the same as saying $\sigma(x)$. This mapping is captured in a substitution $\theta$, so we have for each variable $x$ in $t_1$ and $t_2$, $\theta(x) = s_x$. 
+In the algorithm we will be looking for two substitutions $\sigma$ and $\rho$, such that for two terms $t_1$ and $t_2$, $\rho(\sigma(t_1)) = \sigma(t_2)$. We have a special symbol $s_x$ for each variable $x$. $s_x$ represents $\sigma(x)$. This mapping is captured in a substitution $\theta$, so we have for each variable $x$ in $t_1$ and $t_2$: $\theta(x) = s_x$. Note that $\theta = \sigma$, but we are able to create the inverse of $\theta$ using the extra elements $s_x$. This is because these elements make it so that the mapping \textit{and} the inverse of the mapping both are bijective. 
 
 Before we can implement the algorithm itself, we need two notions of rewriting that are used within it. These are a notion of distributivity and a notion of cancellativity. 
 \subsection{Distributivity}
 Distributivity can be seen as ``pushing down'' the $\rho$ in a term. We know that $\rho$ is a substitution, so it will only have effect on variables. This means that we can ``push down'' the $\rho$ symbol in a term to the variable level:
 $$ \rho(f(x_1, \dots, x_n)) = f(\rho(x_1), \dots, \rho(x_n)) $$
-Note that this notion does not need adaptations for many-sorted terms, as the $\rho$ function its type is always the type of its argument. 
+Note that this notion does not need adaptations for many-sorted terms, as the output type of the $\rho$ function is always the type of its argument. 
 \subsection{Cancellativity}
 Cancellativity of functions can be applied when we have two terms with the same root function symbol. When this is the case, we can cancel out the function symbol and result in $n$ new equations comparing the arguments (for $n$ arguments):
 $$ f(x_1, \dots, x_n) = f(y_1, \dots, y_n) \implies x_1 = y_1, \dots, x_n = y_n $$
 As before, this does not need any adaptations for many-sorted terms, the function symbol on the left is the exact same as on the right, so we do not need any type checks. 
 \subsection{Implementation}
-In Algorithm \ref{semiunification1} on page \pageref{semiunification1} the pseudocode is given for the algorithm. Note that the only places where we need to check for types is in line 6, comparing two function symbols, and when rewriting the rules in line 17. The fact that these checks are added means that the algorithm in some cases might perform better, since there are less possible ways to rewrite the rules.
+In Algorithm \ref{semiunification1} on page \pageref{semiunification1} the pseudocode is given for the algorithm. Note that the only places where we need to check for types is in line 6, comparing two function symbols, and when rewriting the rules in line 17. The fact that these checks are added means that the algorithm in some cases might perform better, since there are fewer possible ways to rewrite the rules.
+
+Also note that when rewriting the equations into rules (at line 14/15) there might be situations where the ordering defined is not complete enough. For example, $f(g(x), y) = f(x, g(y))$: both sides have two function symbols, and the variables appear in the order $y$ then $x$ from right to left. In this case we made the choice that the order does not matter.  
 
 The only ways the algorithm may report failure, is very close to the previously seen unification algorithm. Namely when either we reach a situation where we try to unify two terms with different function symbols, or when we try to unify some variable and non-variable term containing that variable. The latter is referred to as the ``occurs'' check. 
 
 The proof of the full algorithm can be found in the paper\cite{SemiUnification}. Intuitively, the idea is to show that the only reasons semi-unification can fail is when either of the two ``failure'' situations arise. If these situations do not occur, then the first algorithm can be used to obtain the reduced canonical rewrite system. The second algorithm then can be used to extract $\sigma$ and $\rho$.  
+
+The algorithm will succeed if semi-unification is possible and return failure if this is not the case. 
+
+\subsection{Intuition}
+The algorithm works by starting with two terms. We keep try to rewrite the terms to try to find a counterexample of semi-unification. If this counterexample cannot be found, then semi-unification is possible. 
 
 \begin{algorithm}
 \caption{Semi-Unification (Algorithm 1)}
 \label{semiunification1}
 \begin{algorithmic}[1]
 \STATE Input terms $t_1$ and $t_2$
+\STATE Define a total ordering $>_\theta$ on the range of $\theta$ (all the $s_x$ terms)
 \STATE Begin with the equation $\rho(\sigma(t_1)) = \sigma(t_2)$
 \STATE Apply distributivity rules on both sides of the equation
 \STATE Apply cancellativity rules on both sides of the equation
@@ -52,101 +60,53 @@ The proof of the full algorithm can be found in the paper\cite{SemiUnification}.
   \ENDIF
 \ENDFOR
 \STATE \COMMENT {Now we rewrite the equations into rules}:
-\STATE Define a total ordering on the range of $\theta$ (all the $s_x$ terms)
-\STATE Terms containing function symbols (other than $\rho$) are considered lower than ones that do not
-\STATE Other terms are compared by their variables (in lexicographic order from right to left) using the total ordering on $\theta$ 
+\STATE Terms containing function symbols are considered lower than ones that do not
+\STATE Other terms are compared by their variables (in lexicographic order from right to left) using $>_\theta$
 \STATE Now, for each rule, try to rewrite both sides using other rules. If this can be done, replace the rewritten rule by the result.
-\STATE If this can be done, go back to to line 3 with this equation. 
+\STATE If this can be done, go back to to line 4 with this rule as input (keep the others). 
 \STATE Otherwise, report semi-unifiability, and return the resulting rules. 
 \end{algorithmic}
 \end{algorithm}
 
-\section{Algorithm 2} 
-Even though the first algorithm described above suffices to detect semi-unification, we will still implement the second algorithm to extract the substitutions from the resulting rules. We will do this because, even though we are certain the algorithm is correct, it is still a rather complex algorithm in which small mistakes could easily be made. By implementing the second algorithm, we have a double check to ensure that the result is actually correct. If, after applying the second algorithm, the terms do not semi-unify with the substitutions, we can deny semi-unifiability.
-\subsection{Implementation}
-The algorithm can be found in Algorithm \ref{semiunification2} on page \pageref{semiunification2}. Note that here too, not many changes need to be made in order to make the algorithm work for many-sorted terms. The most important points are in lines 4 and 17, where new fresh variables are created. These variables need to have the correct typing. On line 4, this means that the variable $u$ should have the same type as variable $x$. On line 17, this means that all the fresh variables need to have the same type as term $t$. This algorithm is also implemented in my fork of Cora as an analyser called \texttt{SemiUnificationAnalyzer}.
-
-\begin{algorithm}
-\caption{Semi-Unification (Algorithm 2)}
-\label{semiunification2}
-\begin{algorithmic}[1]
-\STATE Input: rules resulting from algorithm 1
-\STATE Initialise $\rho = \emptyset$, $\sigma = \emptyset$ and $\mathcal{V} = V$
-\FORALL {Subterms like $\rho(s_x)$ in all right hand sides}
-  \STATE Create fresh variable $u$
-  \STATE Extend $\theta$ with $\theta(u) = s_u$
-  \STATE $\mathcal{V} = \mathcal{V} \cup \{ u \}$
-  \STATE Extend $\rho$ with $\rho(x) = u$
-\ENDFOR
-\FORALL {Rules in which $\rho$ does not occur}
-  \STATE Left hand side is $s_x$
-  \IF {Right hand side does not contain $s_x$}
-    \STATE Extend $\sigma$ with $\sigma(x) = \theta^{-1}(r)$, $r$ is the right hand side
-  \ENDIF
-\ENDFOR
-\FORALL {Rules in which $\rho$ \textit{does} occur}
-  \STATE Rule is in the form $\rho^i(s_x) \rightarrow t$ with $i \in \mathbb{Z}^+$
-  \STATE Introduce fresh variables $u_1, \dots, u_{i-1}$
-  \STATE Extend $\rho$ with: $\rho(x) = u_1$, $\rho(u_1) = u_2$, \dots, $\rho(u_{i-1}) = \theta^{-1}(t)$
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
-
-\section{Examples}
-Now we will look at some examples too see the workings of both of the algorithms described above. The first example we will look at is the rule $r_1 : f(g(x), x, h(y)) \rightarrow f(y, x, h(g(x)))$. The second example is the rule $r_2 : g(f(x, y), h(y, z)) \rightarrow g(z, x)$, which is an adaptation of an example from \cite{SemiUnification}. 
-\subsection*{Example 1}
-The first example we will look at is $r_1 : f(g(x), x, h(y)) \rightarrow f(y, x, h(g(x)))$, which is an example that is semi-unifiable, typed as follows: 
+\subsection{Examples} % examples alg 1
+Now we will look at some examples to see the workings of both of the algorithms described above. The first example we will look at is the rule $r_1 : f(y, g(1, x)) \rightarrow f(h(y), g(x, 1))$. The second example is the rule $r_2 : g(f(x, y), h(y, z)) \rightarrow g(z, x)$, which is an adaptation of an example from \cite{SemiUnification}. 
+\subsubsection*{Example 1}
+The first example we will look at is $r_1 : f(y, g(1, x)) \rightarrow f(h(y), g(x, 1))$, which is an example that is semi-unifiable, typed as follows: 
 $$
 \begin{array}{rcl}
-    f & :: & a \rightarrow b \rightarrow c \rightarrow a \\
-    g & :: & b \rightarrow a \\
-    h & :: & a \rightarrow c 
+    f & :: & a \rightarrow b \rightarrow c \\
+    g & :: & c \rightarrow c \rightarrow b \\
+    h & :: & a \rightarrow a 
 \end{array}
 $$
-\subsubsection*{Algorithm 1}
-We start with two input terms which are the left and right side of the rule: $t_1 = f(g(x), x, h(y))$ and $t_2 = f(y, x, h(g(x)))$.
 
-We then ``apply'' the substitutions to get to the form $\rho(\sigma(t_1)) = \sigma(t_2)$, in our case this is $\rho(\sigma(f(g(x), x, h(y)))) = \sigma(f(y, x, h(g(x))))$. We can rewrite the $\sigma$ substitutions here using the definition of the $\theta$ substitution: $\rho(f(g(s_x), s_x, h(s_y))) = f(s_y, s_x, h(g(s_x)))$.
+We start with two input terms which are the left and right side of the rule: $t_1 = f(y, g(1, x))$ and $t_2 = f(h(y), g(x, 1))$.
 
-The next step of the algorithm tells us to apply the distributivity rules to both sides of the equation, which in this case is only relevant on the left side, as the right side does not contain any $\rho$ symbols. ``Pushing down'' $\rho$, we get: $f(g(\rho(s_x)), \rho(s_x), h(\rho(s_y))) = f(s_y, s_x, h(g(s_x)))$.
+We then ``apply'' the substitutions to get to the form $\rho(\sigma(t_1)) = \sigma(t_2)$, in our case this is $\rho(\sigma(f(y, g(1, x)))) = \sigma(f(h(y), g(x, 1)))$. We can rewrite the $\sigma$ substitutions here using distribution of $\sigma$ and the definition of the $\theta$ substitution: $\rho(f(s_y, g(1, s_x))) = f(h(s_y), g(s_x, 1))$.
 
-Now that the $\rho$ symbols are on just the variables we can apply the cancellativity rules. This firstly results in three equations: $g(\rho(s_x)) = s_y$, $\rho(s_x) = s_x$ and $h(\rho(s_y)) = h(g(s_x))$. But since we can apply cancellativity on the last equation again, we have to do so. Doing that means we replace it with $\rho(s_y) = g(s_x)$.
+The next step of the algorithm tells us to apply the distributivity rules to both sides of the equation, which in this case is only relevant on the left side, as the right side does not contain any $\rho$ symbols. ``Pushing down'' $\rho$, we get: $f(\rho(s_y), g(1, \rho(s_x))) = f(h(s_y), g(s_x, 1))$.
 
-We did not reach a situation where the occurs check was positive or a mismatching function symbol, so we can continue with the algorithm. In the next step we have to create rules from the obtained equations. In this situation we can get away with using the fact that terms containing function symbols should be on the right. This gives us the following three rules:
+Now that the $\rho$ symbols are on just the variables we can apply the cancellativity rules. This firstly results in two equations: $\rho(s_y) = h(s_y)$ and $g(1, \rho(s_x)) = g(s_x, 1)$. But since we can apply cancellativity on the last equation again, we have to do so. Doing that means we replace it with the following two equations: $1 = s_x$ and $\rho(s_x) = 1$.
+
+We did not reach a situation where the occurs check was positive nor did we find a mismatching function symbol, so we can continue with the algorithm. In the next step we have to create rules from the obtained equations. In this situation we can get away with using the fact that terms containing function symbols should be on the right. This gives us the following three rules:
 $$
 \begin{array}{lrcl}
-    r_{1,1}: & s_y & \rightarrow & g(\rho(s_x)) \\
-    r_{1,2}: & \rho(s_x) & \rightarrow & s_x \\
-    r_{1,3}: & \rho(s_y) & \rightarrow & g(s_x)
+    r_{1,1}: & \rho(s_y) & \rightarrow & h(s_y) \\
+    r_{1,2}: & s_x & \rightarrow & 1 \\
+    r_{1,3}: & \rho(s_x) & \rightarrow & 1
 \end{array}
 $$
-Since we can rewrite $r_{1,1}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $s_y = g(s_x)$, which we will replace rule $r_{1,1}$ by. But before we can possibly do more rewritings, we need to apply the distributivity and cancellativity rules to them and finally create a rule from it. The distributivity and cancellativity rules change nothing and the left term will stay as the left term. So now we have the following three rules:
+Since we can rewrite $r_{1,3}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $\rho(1) \rightarrow 1$, which we will replace rule $r_{1,3}$ by. But before we can possibly do more rewritings, we need to apply distributivity and cancellativity to them and finally create a rule from it. Distributivity change nothing and cancellation of $\rho$ leads to $1 = 1$. This equation is useless, it only says that the two function symbols $1$ are equal, this means we can ignore it as it will have no impact on the result. To conclude this step, we now have the following two rules:
 $$
 \begin{array}{lrcl}
-    r_{1,1}: & s_y & \rightarrow & g(s_x) \\
-    r_{1,2}: & \rho(s_x) & \rightarrow & s_x \\
-    r_{1,3}: & \rho(s_y) & \rightarrow & g(s_x)
+    r_{1,1}: & \rho(s_y) & \rightarrow & h(s_y) \\
+    r_{1,2}: & s_x & \rightarrow & 1
 \end{array}
 $$
-There is another possible rewriting: $r_{1,3}$ using $r_{1,1}$. Applying the rewriting gives us $\rho(g(s_x)) = g(s_x)$, this time the distributivity results in $g(\rho(s_x)) = g(s_x)$ and cancellation will extract the equation $\rho(s_x) = s_x$ from it. This equation will transform into a rule as $\rho(s_x) \rightarrow s_x$. But since we already have this rule, we ignore it. This means we now have the following two rules:
-$$
-\begin{array}{lrcl}
-    r_{1,1}: & s_y & \rightarrow & g(s_x) \\
-    r_{1,2}: & \rho(s_x) & \rightarrow & s_x
-\end{array}
-$$
+
 There is no way to rewrite this further which means that the first algorithm succeeded with as result $r_{1,1}$ and $r_{1,2}$.
-\subsubsection{Algorithm 2}
-Because the first algorithm succeeded we can now use the second algorithm to extract the solution from the resulting rules. 
 
-In the first step we have to deal with all the $\rho(s_x)$ terms on the right hand sides, but in our rules there are none. 
-
-In the second step we have to look at all the rules in which $\rho$ does not occur, this is $r_{1,1}$. The left hand side is $s_y$, since the right hand side does not contain $s_y$, we extend $\sigma$ with $\sigma(y) = \theta^{-1}(g(s_x)) = g(x)$.
-
-In the last step we look at all the rules that \textit{do} contain $\rho$, which is $r_{1,2}$. The rule is in the form $\rho^i(s_x) \rightarrow t$ with $i=1$, $x = x$ and $t = s_x$, so we do not need any fresh variables and set $\rho(x) = \theta^{-1}(t) = x$.
-
-That concludes the second algorithm, the resulting substitutions are $\rho = \{ x \leftarrow x \}$ and $\sigma = \{ g(x) \leftarrow y \}$. It is clear that these substitutions lead to equal terms, namely to $f(g(x), x, h(g(x)))$. We can do a final check to see if the typing in the substitutions is correct, which it is: $x$ gets replaced by $x$, which is an identity substitution. In $\sigma$, $y$, typed $a$, gets replaced by $g(x)$, which also has type $a$. 
-\subsection*{Example 2}
+\subsubsection*{Example 2}
 Now we show an example where semi-unification fails. We do this with the rule $r_2 : g(f(x, y), h(y, z)) \rightarrow g(z, x)$, which is a slight variation of an example taken from \cite{SemiUnification}. In that paper, there was no typing, so we introduce it as follows:
 $$
 \begin{array}{rcl}
@@ -157,12 +117,94 @@ $$
 $$
 As before, we start with the left and right sides as the two input terms. After introducing the substitutions and pushing down, we get:
 $$g(f(\rho(s_x), \rho(s_y)), h(\rho(s_y), \rho(s_z))) = g(s_z, s_x)$$
-After applying cancellation, we result in two equations: $f(\rho(s_x), \rho(s_y)) = s_z$ and $h(\rho(s_y), \rho(s_z)) = s_x$, rewriting these into rules gives us the following two rules: 
+After applying cancellation, we get two equations: $f(\rho(s_x), \rho(s_y)) = s_z$ and $h(\rho(s_y), \rho(s_z)) = s_x$; rewriting these into rules gives us the following two rules: 
 $$
 \begin{array}{lrcl}
     r_{2,1}: & s_z & \rightarrow & f(\rho(s_x), \rho(s_y)) \\
     r_{2,2}: & s_x & \rightarrow & h(\rho(s_y), \rho(s_z))
 \end{array}
 $$
-We can rewrite $r_{2,1}$ using $r_{2,2}$ and result in $s_z = f(\rho(h(\rho(s_y), \rho(s_z))), \rho(s_y))$. Now note that after applying distributivity rules, we get: $$s_z = f(h(\rho(\rho(s_y)), \rho(\rho(s_z))), \rho(s_y))$$
-This gives us a problem as the ``occurs'' check is positive, $s_z$ is contained within the right side. This means that the semi-unification algorithm failed.
+We can rewrite $r_{2,1}$ using $r_{2,2}$ and obtain $s_z = f(\rho(h(\rho(s_y), \rho(s_z))), \rho(s_y))$. Now note that after applying distributivity rules, we get: $$s_z = f(h(\rho(\rho(s_y)), \rho(\rho(s_z))), \rho(s_y))$$
+This gives us a problem as the ``occurs'' check is positive: $s_z$ is contained within the right side. This means that the semi-unification algorithm has failed.
+
+\section{Algorithm 2} 
+Even though the first algorithm described above suffices to detect semi-unification, we will still implement the second algorithm to extract the substitutions from the resulting rules. We will do this because, even though we are certain the algorithm is correct, it is still a rather complex algorithm in which small mistakes could easily be made. By implementing the second algorithm, we have a double check to ensure that the result is actually correct. If, after applying the second algorithm, the terms do not semi-unify with the substitutions, we can deny semi-unifiability.
+\subsection{Implementation}
+The algorithm can be found in Algorithm \ref{semiunification2} on page \pageref{semiunification2}. Note that here as well, not many changes need to be made in order to make the algorithm work for many-sorted terms. The most important points are in lines 4 and 17, where new fresh variables are created. These variables need to have the correct typing. On line 4, this means that the variable $u$ should have the same type as variable $x$. On line 17, this means that all the fresh variables need to have the same type as term $t$. This algorithm is also implemented in Mara as an analyser called \texttt{SemiUnificationAnalyser}.
+
+\begin{algorithm}
+\caption{Semi-Unification (Algorithm 2)}
+\label{semiunification2}
+\begin{algorithmic}[1]
+\STATE Input: rules resulting from algorithm 1
+\STATE Initialise $\rho = \emptyset$, $\sigma = \emptyset$ and $\mathcal{V} = V$
+\FORALL {Subterms like $\rho(s_x)$ in all right hand sides}
+  \STATE Create fresh variable $u$ with $\textit{type}(u) = \textit{type}(x)$ and special symbol $s_u$
+  \STATE Extend $\theta$ with $\theta(u) = s_u$
+  \STATE $\mathcal{V} = \mathcal{V} \cup \{ u \}$
+  \STATE Extend $\rho$ with $\rho(x) = u$
+  \STATE Replace $\rho(s_x)$ with $s_u$ in all rules
+\ENDFOR
+\FORALL {Rules $s_x \rightarrow r$ where $\rho$ does not occur in $r$}
+  \IF {Right hand side does not contain $s_x$}
+    \STATE Extend $\sigma$ with $\sigma(x) = \theta^{-1}(r)$
+  \ENDIF
+\ENDFOR
+\FORALL {Rules in which $\rho$ \textit{does} occur}
+  \STATE Rule is in the form $\rho^i(s_x) \rightarrow t$ with $i \in \mathbb{Z}^+$
+  \STATE Introduce fresh variables $u_1, \dots, u_{i-1}$ all with the type equal to $\textit{type}(x)$
+  \STATE Extend $\rho$ with: $\rho(x) = u_1$, $\rho(u_1) = u_2$, \dots, $\rho(u_{i-1}) = \theta^{-1}(t)$
+\ENDFOR
+\RETURN $\rho$ and $\sigma$
+\end{algorithmic}
+\end{algorithm}
+\subsection{Intuition}
+The algorithm will return substitutions $\rho$ and $\sigma$ on an input system returned from the first algorithm. The algorithm has three general steps to it. In the first step (the first for loop), $rho$ symbols on the right hand sides are replaced by new variables, this replacement is reflected in all the rules. After this step there are no $\rho$ symbols left in any right side of any rule.  
+
+The second step takes care of the rules where the left side does not have a $\rho$ symbol. In this case the rule basically describes a substitution of $\sigma$: the left side is in the form of $s_x$, which means $\sigma(x)$. So after we replace the instances of $s_y$ with $y$ on the right side using $\theta^{-1}$ we can create a substitution step.
+
+The last step of the algorithm takes care of the left sides that \textit{do} contain $\rho$ symbols. Note that this left hand side may contain any number of $\rho$ symbols. For this reason we create a new fresh variable for each symbol. This may lead to unnecessary variables. In the end the idea is the same as in step 2 but instead we extend of extending $\sigma$, we extend $\rho$. 
+
+\subsection{Examples} % examples alg 2
+We will now look at two examples for the second algorithm. The first example is a continuation on the first example of the first algorithm:
+\subsubsection*{Example 1}
+Because the first algorithm succeeded we can now use the second algorithm to extract the solution from the resulting rules. 
+
+The rules we got from the first algorithm are the following two:
+$$
+\begin{array}{lrcl}
+    r_{1,1}: & \rho(s_y) & \rightarrow & h(s_y) \\
+    r_{1,2}: & s_x & \rightarrow & 1
+\end{array}
+$$
+
+In the first step we have to deal with all the $\rho(s_x)$ terms on the right hand sides, but in our rules there are none. 
+
+In the second step we have to look at all the rules in which $\rho$ does not occur, this is $r_{1,2}$. The left hand side is $s_x$, since the right hand side does not contain $s_x$, we extend $\sigma$ with $\sigma(x) = \theta^{-1}(1) = 1$.
+
+In the last step we look at all the rules that \textit{do} contain $\rho$, which is $r_{1,1}$. The rule is in the form $\rho^i(s_y) \rightarrow t$ with $i=1$ and $t = h(s_y)$, so we do not need any fresh variables and set $\rho(y) = \theta^{-1}(t) = h(y)$.
+
+That concludes the second algorithm, the resulting substitutions are $\rho = \{ y \leftarrow h(y) \}$ and $\sigma = \{ x \leftarrow 1 \}$. It is clear that these substitutions lead to equal terms, namely to $f(h(1), g(1, 1))$. 
+
+\subsubsection*{Example 2}
+To show the workings of all steps of the second algorithm, we take a hypothetical result that we could get from the first algorithm and extract the solution from it. Suppose we got the following two rules from the first algorithm:
+$$
+\begin{array}{lrcl}
+    r_{2,1}: & \rho(s_x) & \rightarrow & g(s_y) \\
+    r_{2,2}: & \rho(\rho(s_y)) & \rightarrow & g(\rho(s_x))
+\end{array}
+$$
+
+In the first step, we have to deal with the $\rho(s_x)$ on the right side of rule $r_{2,2}$. We create a fresh variable $u$ with the corresponding special symbol $s_u$ where $\theta(u) = s_u$. We also extend $\rho$ with $\rho(x) = u$. Finally we have to replace $\rho(s_x)$ with $s_u$ in all rules, resulting in:
+$$
+\begin{array}{lrcl}
+    r_{2,1}: & s_u & \rightarrow & g(s_y) \\
+    r_{2,2}: & \rho(\rho(s_y)) & \rightarrow & g(s_u)
+\end{array}
+$$
+
+Now we can go on to the next step: processing all rules in which $\rho$ does not occur. For us this means that we have to process $r_{2,1}$. Since $s_u$ is not a subterm of the right side, we have to extend $\sigma$ with $\sigma(u) = \theta^{-1}(g(s_y)) = g(y)$. 
+
+Lastly, we have to process the rules in which $\rho$ \textit{does} occur. In our case this is only $r_{2,2}$. The rule is in the form $\rho^i(s_y) \rightarrow t$ where $i = 2$ and $t = g(s_u)$. Since we have $i = 2$, we should create one fresh variable $v$. We then extend $\rho$ with $\rho(y) = v$ and $\rho(v) = \theta^{-1}(t) = g(u)$. 
+
+The two resulting substitutions are $\rho = \{ x \leftarrow u, y \leftarrow v, v \leftarrow g(u) \}$ and $\sigma = \{ u \leftarrow g(y) \}$.

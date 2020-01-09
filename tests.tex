@@ -1,14 +1,169 @@
 \chapter{Experiments}\label{experiments}
-We have tested the unfolding technique on a number of examples from TRS (non-)termination competitions\cite{TermPortal} and examples from the confluence competitions\cite{COPS}. A number of entries we tested come from the higher order termination database. The tool WANDA\cite{KOP:WANDASITE} took the first order parts from the original higher order TRSs so they could be used for our experiments. 
+\section{Competitions}
+To benchmark tools that analyse term rewriting systems, there exist competitions. Tools can be submitted to such competitions and will be tested on a (usually large) number of examples. The results are open to everyone and allow us to see which tools perform best. 
 
-Note that there is no first-order termination competition. For this reason we cannot take examples from there. The confluence competition database has some entries tagged with termination and non-termination. This is nice because we can take just them and see how many our analyser can find (and also to make sure that there are either no incorrectly labelled entries or no bugs in our analyser). 
+These competitions are useful for us too, since the set of benchmark TRSs is freely available. We can use these to test our analyser and then also compare results. 
 
-The testing was limited to the unfolding technique, because it encompasses all the other techniques before. We did however, test the examples on both the concrete and abstract analyser. All the experiments were run with a time limit of ten seconds. The results can be found in tables \ref{tab:result:concrete} and \ref{tab:result:abstract}.
+We will look at benchmark sets from three different competitions. Firstly we will run our analyser on the TPDB (Termination Problem Data Base)\cite{TermPortal}, this database contains all the problems used in the (non-)termination competition. In this competition the idea is to classify as many input TRSs as either terminating or non-terminating. 
 
-These are not the only tests we can run. Recall that the unfolding technique uses the semi-unification algorithm. We can also swap in the unification or even the matching algorithm in its place. This will not give us incorrect results as we have seen that matching, unification and semi-unification are all capable of detecting non-termination. The matching and unification algorithm are significantly faster algorithms than semi-unification, though. It is interesting to find out if using semi-unification over unification is significantly better at finding solutions. 
+Another competition we will take benchmarks from is the confluence competition\cite{COPS}. This competition focuses on another property of term rewriting systems: confluence. The main reason we will also test our tool on this set is because this set contains many-sorted TRSs, where the termination competition does not contain many-sorted examples.
 
-It could for example be the case that for a TRS, unfolding with unification is enough to prove non-termination. If this is combined with the fact that the TRS is very large and unfolding with semi-unification results in a timeout, it might actually be useful to run the analyser with unification (or matching) too. 
+The last set of benchmark TRSs come from the higher order competition. The tool WANDA\cite{KOP:WANDASITE} was adapted to isolate the first order parts from the original higher order TRSs so that they could be used for our experiments. This is possible because the higher order competition does have types. 
+
+\section{Experiments}
+The testing was mostly limited to the unfolding technique, because it encompasses all the other techniques before. We did however, test the examples on both the concrete and abstract analyser. All the experiments were run with a time limit of ten seconds and at most ten unfolding steps. 
+
+These are not the only tests we can run. Recall that the unfolding technique uses the semi-unification algorithm. We can also swap in the unification in its place. This will not give us incorrect results as we have seen that unification and semi-unification are both capable of detecting non-termination. The unification algorithm is a faster algorithm than semi-unification, though. It is interesting to find out if using semi-unification over unification is significantly better at finding solutions. It could for example be the case that for a TRS, unfolding with unification is enough to prove non-termination. If this is combined with the fact that the TRS is very large and unfolding with semi-unification results in a timeout, it might actually be useful to run the analyser with unification too. Note that semi-unification is still a technique that is theoretically stronger, unification will most definitely find less results.  
 
 Another test is to run the analyser without augmenting the TRS as a pre-processing step. Even though the augmenting step might increase the chance of finding non-termination, it also can increase the number of rules significantly, which in its place increases the running time of the algorithm. 
 
 To run the tests and visualise the results, a small framework was created in Python to which the link can be found in the appendices. The tests were run on a Windows machine with an i7-8565U CPU and 16GB of RAM. 
+
+\section{Results}
+\subsection{TPDB}
+The first results (Table \ref{tab:result:concrete} and Table \ref{tab:result:abstract}) are the results of running our analyser on the Termination Problem Data Base\cite{TermPortal} with a timeout of ten seconds. Note that these examples are all untyped and thus not what our tool is created for. These tables show concrete and abstract unfolding respectively. Both of these tables show the results of augmenting versus not augmenting and using semi-unification versus using unification.  
+
+We also ran the examples on pure semi-unification (so no unfolding steps). We can do this by taking the concrete unfolder and setting the maximum unfoldings to zero. Doing this, we found 64 out of the 1259 examples to be non-terminating. 
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 118 & 79 & 120 & 76 \\ \hline
+    Maybe & 159 & 169 & 441 & 464\\ \hline
+    Timeout & 982 & 1011 & 698 & 719 \\ \hline
+    Total Time & 2:51:55 & 2:52:13 & 2:06:44 & 2:09:17 \\ \hline
+    Avg. without timeouts & 1.79 & 0.65 & 1.11 & 1.05 \\ \hline
+    \end{tabular}
+    \caption{TPDB: Concrete unfolding analyser results}
+\label{tab:result:concrete}
+
+\end{table}
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 123 & 85 & 117 & 73 \\ \hline
+    Maybe & 235 & 259 & 561 & 610 \\ \hline
+    Timeout & 901 & 915 & 581 & 576 \\ \hline
+    Total Time & 2:35:29 & 2:38:13 & 1:46:02 & 1:45:46 \\ \hline
+    Avg. without timeouts & 0.89 & 1.00 & 0.81 & 0.86 \\ \hline
+    \end{tabular}
+    \caption{TPDB: Abstract unfolding analyser results}
+    \label{tab:result:abstract}
+\end{table}
+
+\subsubsection{Results unfolding}
+The results from the experiments are consistent. It is clear that choosing semi-unification instead of unification is always a good idea. Semi-unification finds about 50\% more systems that are non-terminating in about the same time. However, the comparison on the total time is not completely fair. Since unification finds fewer non-terminating systems, it more often needs to go on for the entire timeout limit (or until the analysis is done). This can be seen in the last row of each result table. Note that this difference is not seen when the difference in timeouts is small. 
+
+The most important observation we can make is that augmenting the term rewriting system as a pre-processing step is expensive. However, it is still worthwhile: we have already seen an example where not augmenting would result in a \texttt{MAYBE} result but with augmenting we were able to find a loop. This occurs many more times in systems we have analysed. In the results of the abstract analyser we find more non-terminating TRSs when augmenting (123 instead of 117). But there are also systems where augmenting would result in a timeout and not augmenting \textit{would} find the non-termination. There were 19 cases where augmenting found a result where not augmenting would not and 15 cases where not augmenting would find a result where augmenting would not.
+
+Comparing the abstract unfolding and concrete unfolding matches expectations. There is no example where the concrete unfolder \textit{was} able to find non-termination and where the abstract unfolder returned \texttt{MAYBE}. There are cases, however, where the abstract unfolder timed out and the concrete unfolder was able to find non-termination. Over-all the abstract unfolder detected more cases of non-termination. 
+
+There is one special example, using the concrete unfolder and by not augmenting the system as a pre-processing step, we were able to detect non-termination in an example where the other tools in the most recent termination competition were not. It is \texttt{Zantema\_15\char`\\s.xml} from the Termination Problem Data Base. It is the following TRS:
+\[
+\begin{array}{lrcl}
+    r_1: & a(a(a(S, x), y), z) & \rightarrow & a(a(x, z), a(y, z)) 
+\end{array}
+\]
+Non-termination is proven by unfolding on the positions in the following order: $\epsilon$, $2.\epsilon$, $2.2.\epsilon$, $2.2.2.\epsilon$ and finally $2.2.2.2.\epsilon$. Then semi-unification is possible between the left hand side and position $1.\epsilon$ on the right hand side. 
+
+\subsubsection{Results pure semi-unification}
+Pure semi-unification is not able to find any new results on top of what we already knew. This is because the setup is embedded into concrete unfolding with more than zero unfoldings. 
+
+\subsection{Confluence Problem Database}
+We applied our analyser to a number of problems from the confluence database. Since these examples are labelled,  we can extract all rewriting systems labelled as non-terminating or terminating. These labels were mainly a way to test our analyser. Note that these systems labelled as (non-)terminating are all untyped. 
+
+We tested the 418 term rewriting systems labelled as \texttt{non-terminating} with the abstract unfolding technique using semi-unification. Even without augmenting all of the 418 systems come out as non-terminating in 12 seconds. When augmenting is used as a pre-processing step, a few timeouts (at ten seconds) occurred. When we use unification instead of semi-unification we are not able to find all the results (both with and without augmenting). 
+
+For 95 rewriting systems labelled as \texttt{terminating}, we found none of them being non-terminating. 
+
+There are also some many-sorted benchmarks in this database. For these examples, we ran the same tests as we did with the TPDB. This means that we tried both the concrete and abstract analyser on augmenting versus not augmenting and semi-unification versus unification. The results from these tests can be found in tables \ref{tab:cops:conc} and \ref{tab:cops:abst}. 
+
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 34 & 33 & 34 & 33 \\ \hline
+    Maybe & 5 & 5 & 8 & 9\\ \hline
+    Timeout & 16 & 17 & 13 & 13 \\ \hline
+    Total Time & 0:03:00 & 0:03:11 & 0:02:15 & 0:02:13 \\ \hline
+    \end{tabular}
+    \caption{COPS: Concrete unfolding analyser results}
+\label{tab:cops:conc}
+
+\end{table}
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 34 & 33 & 34 & 33 \\ \hline
+    Maybe & 8 & 9 & 10 & 11 \\ \hline
+    Timeout & 13 & 13 & 11 & 11 \\ \hline
+    Total Time & 0:02:39 & 0:02:30 & 0:01:53 & 0:01:52 \\ \hline
+    \end{tabular}
+    \caption{COPS: Abstract unfolding analyser results}
+    \label{tab:cops:abst}
+\end{table}
+
+The results are all very much the same, there is only one example which could not be solved using unification. Augmenting the TRS as a pre-processing step did not have much impact besides taking slightly longer to analyse. 
+
+\section{Transformed from Higher Order Problems}
+Lastly, we have the benchmark set that WANDA\cite{KOP:WANDASITE} could extract from the higher order database. We will again run these benchmarks with the same configurations as before: both concrete- and abstract unfolding both with augmenting versus without and with semi-unification versus unification. The results of these tests can be found in table \ref{tab:hot:conc} for the concrete unfolding tests and in table \ref{tab:hot:abst} for the abstract unfolding tests.  
+
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 7 & 7 & 4 & 4 \\ \hline
+    Maybe & 43 & 44 & 75 & 75\\ \hline
+    Timeout & 59 & 58 & 30 & 30 \\ \hline
+    Total Time & 0:11:28 & 0:10:57 & 0:05:31 & 0:05:25 \\ \hline
+    \end{tabular}
+    \caption{COPS: Concrete unfolding analyser results}
+\label{tab:hot:conc}
+
+\end{table}
+\begin{table}[ht]
+    \centering
+    \addtolength{\leftskip} {-2cm}
+    \addtolength{\rightskip}{-2cm}
+
+    \begin{tabular}{|l|l|l|l|l|}
+    \cline{2-5} 
+    \multicolumn{1}{c|}{} & \multicolumn{2}{l|}{Augmented} & \multicolumn{2}{l|}{Non Augmented} \\ \cline{2-5} 
+    \multicolumn{1}{c|}{} & Semi-Unification & Unification & Semi-Unification & Unification \\ \hline
+    Non Terminating & 7 & 7 & 4 & 4 \\ \hline
+    Maybe & 51 & 52 & 87 & 88 \\ \hline
+    Timeout & 51 & 50 & 18 & 17 \\ \hline
+    Total Time & 0:09:08 & 0:08:54 & 0:03:47 & 0:03:34 \\ \hline
+    \end{tabular}
+    \caption{COPS: Abstract unfolding analyser results}
+    \label{tab:hot:abst}
+\end{table}
+
+In this case, there was no difference between using semi-unification or unification. There was, however, a difference between not augmenting and augmenting. In particular, not augmenting lead to not detecting non-termination in three examples. There are no examples where not augmenting was successful and augmenting was not.

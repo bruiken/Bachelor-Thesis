@@ -6,18 +6,18 @@
 }
 
 \chapter{Related Work}\label{relatedwork}
-A lot of related work in the analysis of term rewriting systems is done specifically on the termination side. It should be noted that this work is also relevant to the non-termination analysis. Non-termination is disproven by proven termination and the other way around. Many tools use both termination and non-termination techniques to get as complete an answer as possible. The techniques implemented in this paper might determine when a TRS is non-terminating, but it never knows for sure when a TRS is terminating, i.e. Mara never answer \texttt{TERMINATING}. In this chapter a number of relevant techniques and tools are discussed.
+A lot of related work in the analysis of term rewriting systems is done specifically on the termination side. It should be noted that this work is also relevant to the non-termination analysis. Non-termination is disproven by proven termination and the other way around. Many tools use both termination and non-termination techniques to get as complete an answer as possible. The techniques implemented in this paper might determine when a TRS is non-terminating, but it never knows for sure when a TRS is terminating, i.e. Mara never answers \texttt{TERMINATING}. In this chapter a number of relevant techniques and tools are discussed.
 
 \section{Dependency Pair Framework}
-One of the most popular techniques for proving both termination and non-termination is the Dependency Pair Framework\cite{thiemann2007dp}. Traditionally it was created for unsorted term rewriting systems. But there are already variants including higher-order TRSs, context-sensitive TRSs and constrained TRSs. The higher-order and constrained TRSs both contain types so a definition for sorted TRSs should also be clear. The dependency pair framework is built upon the dependency pair approach\cite{arts2000termination}. In the dependency pair framework a set $DP(R)$ is generated from ``rules'' that identify the function calls in $R$. For example, from a rule $f(x) \rightarrow g(f(x), 0)$, the set $DP(R)$ becomes $DP(R) = \{ F(x) \rightarrow G(f(x), 0), F(x) \rightarrow F(x) \}$.
+One of the most popular techniques for proving both termination and non-termination is the Dependency Pair Framework\cite{thiemann2007dp}. Traditionally it was created for unsorted term rewriting systems. But there are already variants including higher-order TRSs, context-sensitive TRSs and constrained TRSs. The higher-order and constrained TRSs both contain types so a definition for sorted TRSs should also be clear. The dependency pair framework is built upon the dependency pair approach\cite{arts2000termination}. In the dependency pair framework a set $DP(R)$ is generated from ``rules'' that identify the function calls in $R$. For example, from a rule $f(x) \rightarrow g(f(x), 0)$, the set $DP(R)$ becomes $DP(R) = \{ F(x) \rightarrow G(f(x), 0), F(x) \rightarrow F(x) \}$. This is because in the rule, there is a call to $f$ and one to $g$ on the right-hand side.
 
 Now the idea is to let both non-termination and termination techniques operate on the dependency pairs instead of on the TRS itself. This way, the problems are smaller and thus easier to solve. Techniques that operate on dependency pairs are called dependency pair processors or \textit{Proc}. The processor can either return a set of dependency pair problems, or \texttt{no}. 
 
 The unfolding technique could be implemented as a DP processor and that way be used in the dependency pair framework. 
-\subsection*{Finite Automata}
+\subsection{Finite Automata}
 A very recent technique for proving non-termination is by using finite automata \cite{ENDRULLIS:AUTOMATA}. Here, the goal is not to directly look for an infinite reduction in a TRS. Instead, a regular language is sought with properties from which non-termination follow. Then these properties are defined in a propositional formula. This formula can be analysed by a SAT solver, if the formula can be satisfied, the original TRS is non-terminating. A tree automaton is used to represent the language that is sought after, in a run of the algorithm, it has a fixed number of states. 
 
-\subsection*{Non-looping Non-Termination}
+\subsection{Non-looping Non-Termination}
 The most common way to detect non-termination in a TRS is to find a loop. This is done by finding a finite sequence of rewriting steps such that the first term is a subterm of the last term. Loops are not the only way to detect non-termination, though. Another way is to find non-looping non-termination, as for example in \cite{emmes2012detecting}. Non-looping, as its name suggests, does not have a loop, but is able to create an infinite rewriting sequence. We use an example from \cite{emmes2012detecting}:
 \[
 \begin{array}{lrcl}
@@ -41,33 +41,33 @@ Here, $\rightarrow^n$ means $n$ steps of rewriting and $s^{n}(0)$ denotes $n$ $s
 \section{Some Termination Techniques}
 In this section a few old but very powerful methods are discussed to detect termination, but these are certainly not all of the popular methods. 
 
-\subsection*{Polynomial Interpretations}
+\subsection{Polynomial Interpretations}
 Polynomial interpretations \cite{BENCHERIFA1987137} can be used as a way to detect termination of term rewriting systems. Here, the goal is to give polynomial interpretations for each function symbol and then prove that for each left side is greater than the right side using the interpretations. 
 
 This technique has been extended and improved over time for example in \cite{HIROKAWA:PolyNeg}, to extend the class of rewriting systems of which termination  can be detected using negative coefficients. And in \cite{FUHSKOP:PolyHO}, to extend the technique to be able to work in higher order term rewriting systems. The latter can be useful because it is already typed, but for higher order systems. 
 
 An interesting find is also done in \cite{Pol}. Here, there are no polynomial interpretations, just interpretations. The suggestion is to give different types different sets. For example, a type \texttt{nat} (the natural numbers) can be given the set of the natural numbers, \texttt{bool} (booleans) can be given the set $\{ 0, 1 \}$. This way, the typing is saved.
 
-\subsection*{Path Orderings}
+\subsection{Path Orderings}
 In Dershowitz \cite{DERSHOWITZ1982279} a number of orderings are given to prove termination. One of these orderings is called the recursive path ordering. This well known technique works by defining a ordering over the function symbols of a TRS, if the ordering respects the recursive path ordering, the TRS is terminating. In \cite{CPO} a higher order variant is defined called Computability Path Ordering (CPO). Since CPO already uses types (higher order types), it might be useful in the first-order TRSs. 
 
 \section{Tools}
-At the time of writing, there is no clear sign of any existing tool to detect non-termination in many-sorted term rewriting systems. This is not really surprising as there also were no techniques for this. There are, however, a lot of (non-)termination tools out there. Some examples are NTI, AProVE, NaTT, \TTTT, WANDA and TORPA.
+At the time of writing, there is no clear sign of any existing tool to detect non-termination in many-sorted term rewriting systems. This is not really surprising as there also were no techniques for this. There are, however, a lot of (non-)termination tools out there for different kinds of rewriting systems. Some examples are NTI, AProVE, NaTT, \TTTT, WANDA and TORPA.
 
-\subsection*{NTI}
+\subsection{NTI}
 NTI\cite{payet2018guided} stands for Non Termination Inference, it is a tool to prove non-termination of term rewriting systems. The prover uses guided unfoldings, which is a reconsideration of the unfolding analyser we have adapted\cite{Payet:Unfolding}. The first implementation of NTI is open source and written in C++, the newest version (which is currently participating in competitions), is not open source\cite{PAYET:NTI}.
 
-\subsection*{AProVE}
+\subsection{AProVE}
 AProVE\cite{10.1007/11814771_24} is a tool that can prove both termination and non-termination. AProVE is built upon the Dependency Pair Framework and contains at least 22 processors. These include processors for proving non-termination\cite{GIESL:APROVE}. AProVE is not open-source. 
 
-\subsection*{NaTT}
+\subsection{NaTT}
 The Nagoya Termination Tool (NaTT) is a closed source termination prover\cite{Yamada2014NagoyaTT}. It was the first tool to implement the weighted path order\cite{Yamada2014NagoyaTT}. NaTT, like AProVE, is built upon the Dependency Pair Framework. The tool does have some non-termination techniques, but is specialised on termination.
 
-\subsection*{\TTTT}
+\subsection{\TTTT}
 \TTTT is the Tyrolean Termination Tool 2\cite{TTTT}. It is the open-source successor of the non open-source \TTT \cite{HIROKAWA2007474}. The tool is a termination analyser for first-order term rewriting systems. Just like AProVE, it is based on the Dependency Pair Framework, with processors such as increasing interpretations, a modular match-bound technique, uncurrying and outermost loops\cite{TTTT}. As with many other tools, it does have some non-termination techniques but is specialised on termination.
 
-\subsection*{WANDA}
+\subsection{WANDA}
 WANDA is an open-source higher-order termination tool\cite{KOP:WANDASITE}. The tool features a number of techniques which include the Dependendy Pair Framework, polynomial interpretations and higher-order recursive path ordering. The theory of WANDA is based upon\cite{KOP:WANDA}. WANDA has very limited non-termination techniques. WANDA also uses a dedicated tool for the first order part of a higher-order system, currently AProVE. When AProVE answers \texttt{NO}, WANDA checks if this untyped answer (since it is the first-order part) can be correctly typed for the higher order system. Mara could be used to detect non-termination instead, because then WANDA does not have to do any type checks (since Mara can work with first-order types). This may also hold for other higher-order tools.
 
-\subsection*{TORPA}
+\subsection{TORPA}
 TORPA is a termination analysis tool that focuses on string rewriting systems \cite{ZANTEMA:TORPA}, TORPA is closed source. It includes a number of techniques, such as: polynomial interpretations, recursive path ordering, the Dependency Pair Framework, RFC-match-bounds and semantic labelling. 

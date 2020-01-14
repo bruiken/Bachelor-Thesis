@@ -32,7 +32,7 @@ As before, this does not need any adaptations for many-sorted terms, the functio
 \subsection{Implementation}
 In Algorithm \ref{semiunification1} on page \pageref{semiunification1} the pseudocode is given for the algorithm. Note that the only places where we need to check for types is in line 6, comparing two function symbols, and when rewriting the rules in line 17. The fact that these checks are added means that the algorithm in some cases might perform better, since there are fewer possible ways to rewrite the rules.
 
-Also note that when rewriting the equations into rules (at line 14/15) there might be situations where the ordering defined is not complete enough. For example, $f(g(x), y) = f(x, g(y))$: both sides have two function symbols, and the variables appear in the order $y$ then $x$ from right to left. In this case we made the choice that the order does not matter.  
+Also note that when rewriting the equations into rules (at line 14/15) there might be situations where the ordering defined is not complete enough. For example, $f(g(x), y) = f(x, g(y))$: both sides have two function symbols, and the variables appear in the order $y$ then $x$ from right to left. In this case we made the choice that the order does not matter. Another problem comes into place comparing terms such as $\rho(s_x)$ and $s_x$. Strictly speaking $\rho$ is not a function symbol of a TRS, so the terms would be equal. The problem when writing into the rule $s_x \rightarrow \rho(s_x)$ is that this rule is non-terminating. This would lead to the algorithm not terminating. To solve this, when the comparison on function symbols does not help, another comparison is done on the number of $\rho$ symbols. The term with the highest number of $\rho$ symbols becomes the left-hand side.
 
 The only ways the algorithm may report failure, is very close to the previously seen unification algorithm. Namely when either we reach a situation where we try to unify two terms with different function symbols, or when we try to unify some variable and non-variable term containing that variable. The latter is referred to as the ``occurs'' check. 
 
@@ -41,7 +41,7 @@ The proof of the full algorithm can be found in the paper\cite{SemiUnification}.
 The algorithm will succeed if semi-unification is possible and return failure if this is not the case. 
 
 \subsection{Intuition}
-The algorithm works by starting with two terms. We keep try to rewrite the terms to try to find a counterexample of semi-unification. If this counterexample cannot be found, then semi-unification is possible. 
+The algorithm works by starting with two terms. We keep trying to rewrite the terms to try to find a counterexample of semi-unification. If this counterexample cannot be found, then semi-unification is possible. 
 
 \begin{algorithm}
 \caption{Semi-Unification (Algorithm 1)}
@@ -96,7 +96,7 @@ $$
     r_{1,3}: & \rho(s_x) & \rightarrow & 1
 \end{array}
 $$
-Since we can rewrite $r_{1,3}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $\rho(1) \rightarrow 1$, which we will replace rule $r_{1,3}$ by. But before we can possibly do more rewritings, we need to apply distributivity and cancellativity to them and finally create a rule from it. Distributivity change nothing and cancellation of $\rho$ leads to $1 = 1$. This equation is useless, it only says that the two function symbols $1$ are equal, this means we can ignore it as it will have no impact on the result. To conclude this step, we now have the following two rules:
+Since we can rewrite $r_{1,3}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $\rho(1) \rightarrow 1$, which we will replace rule $r_{1,3}$ by. But before we can possibly do more rewritings, we need to apply distributivity and cancellativity to them and finally create a rule from it. Distributivity changes nothing and cancellation of $\rho$ leads to $1 = 1$. This equation is useless, it only says that the two function symbols $1$ are equal, this means we can ignore it as it will have no impact on the result. To conclude this step, we now have the following two rules:
 $$
 \begin{array}{lrcl}
     r_{1,1}: & \rho(s_y) & \rightarrow & h(s_y) \\
@@ -187,7 +187,7 @@ In the last step we look at all the rules that \textit{do} contain $\rho$, which
 That concludes the second algorithm, the resulting substitutions are $\rho = \{ y \leftarrow h(y) \}$ and $\sigma = \{ x \leftarrow 1 \}$. It is clear that these substitutions lead to equal terms, namely to $f(h(1), g(1, 1))$. 
 
 \subsubsection*{Example 2}
-To show the workings of all steps of the second algorithm, we take a hypothetical result that we could get from the first algorithm and extract the solution from it. Suppose we got the following two rules from the first algorithm:
+To show the workings of all steps of the second algorithm, we take a hypothetical result that we could get from the first algorithm and extract the solution from it. Suppose we got the following two rules from the first algorithm (note that these rules cannot be an actual outcome, as $r_{2,2}$ could be rewritten with $r_{2,1}$):
 $$
 \begin{array}{lrcl}
     r_{2,1}: & \rho(s_x) & \rightarrow & g(s_y) \\

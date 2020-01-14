@@ -36,8 +36,8 @@ We also ran the examples on pure semi-unification (so no unfolding steps). We ca
     Non Terminating & 118 & 79 & 120 & 76 \\ \hline
     Maybe & 159 & 169 & 441 & 464\\ \hline
     Timeout & 982 & 1011 & 698 & 719 \\ \hline
-    Total Time & 2:51:55 & 2:52:13 & 2:06:44 & 2:09:17 \\ \hline
-    Avg. without timeouts & 1.79 & 0.65 & 1.11 & 1.05 \\ \hline
+    Total Time (HH:MM:SS) & 2:51:55 & 2:52:13 & 2:06:44 & 2:09:17 \\ \hline
+    Avg. without timeouts (sec) & 1.79 & 0.65 & 1.11 & 1.05 \\ \hline
     \end{tabular}
     \caption{TPDB: Concrete unfolding analyser results}
 \label{tab:result:concrete}
@@ -55,8 +55,8 @@ We also ran the examples on pure semi-unification (so no unfolding steps). We ca
     Non Terminating & 123 & 85 & 117 & 73 \\ \hline
     Maybe & 235 & 259 & 561 & 610 \\ \hline
     Timeout & 901 & 915 & 581 & 576 \\ \hline
-    Total Time & 2:35:29 & 2:38:13 & 1:46:02 & 1:45:46 \\ \hline
-    Avg. without timeouts & 0.89 & 1.00 & 0.81 & 0.86 \\ \hline
+    Total Time (HH:MM:SS) & 2:35:29 & 2:38:13 & 1:46:02 & 1:45:46 \\ \hline
+    Avg. without timeouts (sec) & 0.89 & 1.00 & 0.81 & 0.86 \\ \hline
     \end{tabular}
     \caption{TPDB: Abstract unfolding analyser results}
     \label{tab:result:abstract}
@@ -67,7 +67,7 @@ The results from the experiments are consistent. It is clear that choosing semi-
 
 The most important observation we can make is that augmenting the term rewriting system as a pre-processing step is expensive. However, it is still worthwhile: we have already seen an example where not augmenting would result in a \texttt{MAYBE} result but with augmenting we were able to find a loop. This occurs many more times in systems we have analysed. In the results of the abstract analyser we find more non-terminating TRSs when augmenting (123 instead of 117). But there are also systems where augmenting would result in a timeout and not augmenting \textit{would} find the non-termination. There were 19 cases where augmenting found a result where not augmenting would not and 15 cases where not augmenting would find a result where augmenting would not.
 
-Comparing the abstract unfolding and concrete unfolding matches expectations. There is no example where the concrete unfolder \textit{was} able to find non-termination and where the abstract unfolder returned \texttt{MAYBE}. There are cases, however, where the abstract unfolder timed out and the concrete unfolder was able to find non-termination. Over-all the abstract unfolder detected more cases of non-termination. 
+Comparing the abstract unfolding and concrete unfolding matches expectations. There is no example where the concrete unfolder \textit{was} able to find non-termination and where the abstract unfolder returned \texttt{MAYBE}. There are cases, however, where the abstract unfolder timed out and the concrete unfolder was able to find non-termination. Overall, the abstract unfolder detected more cases of non-termination. 
 
 There is one special example, using the concrete unfolder and by not augmenting the system as a pre-processing step, we were able to detect non-termination in an example where the other tools in the most recent termination competition were not. It is \texttt{Zantema\_15\char`\\s.xml} from the Termination Problem Data Base. It is the following TRS:
 \[
@@ -101,7 +101,7 @@ There are also some many-sorted benchmarks in this database. For these examples,
     Non Terminating & 34 & 33 & 34 & 33 \\ \hline
     Maybe & 5 & 5 & 8 & 9\\ \hline
     Timeout & 16 & 17 & 13 & 13 \\ \hline
-    Total Time & 0:03:00 & 0:03:11 & 0:02:15 & 0:02:13 \\ \hline
+    Total Time (HH:MM:SS) & 0:03:00 & 0:03:11 & 0:02:15 & 0:02:13 \\ \hline
     \end{tabular}
     \caption{COPS: Concrete unfolding analyser results}
 \label{tab:cops:conc}
@@ -119,7 +119,7 @@ There are also some many-sorted benchmarks in this database. For these examples,
     Non Terminating & 34 & 33 & 34 & 33 \\ \hline
     Maybe & 8 & 9 & 10 & 11 \\ \hline
     Timeout & 13 & 13 & 11 & 11 \\ \hline
-    Total Time & 0:02:39 & 0:02:30 & 0:01:53 & 0:01:52 \\ \hline
+    Total Time (HH:MM:SS) & 0:02:39 & 0:02:30 & 0:01:53 & 0:01:52 \\ \hline
     \end{tabular}
     \caption{COPS: Abstract unfolding analyser results}
     \label{tab:cops:abst}
@@ -142,9 +142,9 @@ Lastly, we have the benchmark set that WANDA\cite{KOP:WANDASITE} could extract f
     Non Terminating & 7 & 7 & 4 & 4 \\ \hline
     Maybe & 43 & 44 & 75 & 75\\ \hline
     Timeout & 59 & 58 & 30 & 30 \\ \hline
-    Total Time & 0:11:28 & 0:10:57 & 0:05:31 & 0:05:25 \\ \hline
+    Total Time (HH:MM:SS) & 0:11:28 & 0:10:57 & 0:05:31 & 0:05:25 \\ \hline
     \end{tabular}
-    \caption{COPS: Concrete unfolding analyser results}
+    \caption{Transformed: Concrete unfolding analyser results}
 \label{tab:hot:conc}
 
 \end{table}
@@ -160,9 +160,9 @@ Lastly, we have the benchmark set that WANDA\cite{KOP:WANDASITE} could extract f
     Non Terminating & 7 & 7 & 4 & 4 \\ \hline
     Maybe & 51 & 52 & 87 & 88 \\ \hline
     Timeout & 51 & 50 & 18 & 17 \\ \hline
-    Total Time & 0:09:08 & 0:08:54 & 0:03:47 & 0:03:34 \\ \hline
+    Total Time (HH:MM:SS) & 0:09:08 & 0:08:54 & 0:03:47 & 0:03:34 \\ \hline
     \end{tabular}
-    \caption{COPS: Abstract unfolding analyser results}
+    \caption{Transformed: Abstract unfolding analyser results}
     \label{tab:hot:abst}
 \end{table}
 

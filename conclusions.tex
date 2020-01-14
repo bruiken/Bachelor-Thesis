@@ -6,4 +6,6 @@ The main techniques we have adapted to work for many-sorted term rewriting syste
 Apart from the extra type checks, there have been more changes. For example in the graph of functional dependencies, where the definition had to be altered altogether to make it work for types.
 
 \section{Experiments}
-The results from all of the experiments match expectations. Semi-unification is often stronger than unification. It, together with the abstract unfolding technique is the best at finding non-termination. What is not directly obvious, is if augmenting as a pre-processing step is always worth it. It usually leads to better results but it also takes considerably more time to calculate which may lead to timeouts.
+The results from all of the experiments match expectations. Semi-unification is often stronger than unification. It, together with the abstract unfolding technique, is the best at finding non-termination. What is not directly obvious, is if augmenting as a pre-processing step is always worth it. It usually leads to better results but it also takes considerably more time to calculate which may lead to timeouts. 
+
+We were also able to find non-termination in one example where no other tool could. This was not with the ``strongest'' setup; rather with the concrete unfolding with semi-unification and without augmenting beforehand.

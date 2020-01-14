@@ -16,8 +16,9 @@ The set $\textit{Ter}\left(\Sigma\right)$ is inductively defined as follows:
 \end{definition}
 
 \subsubsection*{Positions}
-Positions can be seen as pointers to specific subterms within a term. We define these positions by $\textit{Pos}\left(t\right)$ where $t \in \textit{Ter}\left(\Sigma\right)$:
+Positions can be seen as pointers to specific subterms within a term. We define these positions by $\textit{Pos}\left(t\right)$:
 \begin{definition}
+for $t \in \textit{Ter}\left(\Sigma\right)$ we define
 $$
 \textit{Pos}(t) = \left\{\begin{array}{ll}
         \left\{\epsilon\right\}, & \text{if } t \in \mathcal{V}\\
@@ -38,7 +39,7 @@ A substitution is a mapping $\sigma = \{ v_1 \leftarrow t_1, \dots, v_n \leftarr
 \textbf{Example 2.2}: \textit{Continuation of example 2.1}. Let us say we want to create a substitution $\sigma_1 = \{ 0 \leftarrow x, suc(y) \leftarrow y \}$. We can apply this substitution to terms as follows: $\sigma_1(t_1) = \sigma_1(t_2) = 0$, $\sigma_1(t_3) = plus(\sigma_1(x), \sigma_1(y)) = plus(0, suc(y))$ and $\sigma_1(t_4) = suc(\sigma_1(plus(0, x))) = suc(plus(0, \sigma_1(x))) = suc(plus(0, 0))$.
 
 \subsubsection*{Rewrite rules}
-We can now create a notion for rewrite rules. These rules have a left and right side, the left side cannot be a variable, otherwise the rule can be applied to any term. Also, the right side cannot contain any variables that do not exist on the left side. This is because otherwise, the variable cannot be given a value when applying the rule.
+We can now create a notion for rewrite rules. These rules have a left and right side, the left side cannot be a variable, otherwise the rule could be applied to any term. Also, the right side cannot contain any variables that do not exist on the left side. This is because otherwise, the variable cannot be given a value when applying the rule.
 \begin{definition}
 A rewrite rule is defined as $r_i : l \rightarrow r$. Here, $l$ and $r$ are terms in $\textit{Ter}(\Sigma)$. $r_i$ is an optional name for the rule. Furthermore, $l$ cannot be a variable and if $\textit{Var}(t)$ defines the variables in a term $t$, $\textit{Var}(r) \subseteq \textit{Var}(l)$. 
 \end{definition}
@@ -140,7 +141,9 @@ A unifier of two terms is a substitution $\sigma$ such that, when applied to two
 Given two terms $t_1$ and $t_2$, a unifier $\sigma$ is a substitution such that $\sigma(t_1) = \sigma(t_2)$.
 \end{definition}
 
-\textbf{Example 2.6} \textit{We will omit types in this example, in further examples we always talk about many-sorted systems, but sometimes types are omitted}. Let us take two terms $t_1 = f(g(x), y)$ and $t_2 = f(z, g(z))$. To unify these two terms, we can use a unifier $\sigma_1 = \{ g(z) \leftarrow y, g(x) \leftarrow z \}$.
+\textit{We will omit types in the following example, in further examples we always talk about many-sorted systems, but sometimes types are omitted}.
+
+\textbf{Example 2.6}  Let us take two terms $t_1 = f(g(x), y)$ and $t_2 = f(z, g(z))$. To unify these two terms, we can use a unifier $\sigma_1 = \{ g(z) \leftarrow y, g(x) \leftarrow z \}$.
 
 \section{Most General Unifiers}
 We will now look at what happens when we apply multiple substitutions on one term. If we have multiple substitutions to apply to $t$, for example $\sigma_1$ and $\sigma_2$, we denote it as $t\sigma_1\sigma_2$. If we see the substitution as a function we can write $\sigma_2\left( 

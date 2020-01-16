@@ -6,7 +6,7 @@
 }
 
 \chapter{Related Work}\label{relatedwork}
-A lot of related work in the analysis of term rewriting systems is done specifically on the termination side. It should be noted that this work is also relevant to the non-termination analysis. Non-termination is disproven by proven termination and the other way around. Many tools use both termination and non-termination techniques to get as complete an answer as possible. The techniques implemented in this paper might determine when a TRS is non-terminating, but it never knows for sure when a TRS is terminating, i.e. Mara never answers \texttt{TERMINATING}. In this chapter a number of relevant techniques and tools are discussed.
+A lot of related work in the analysis of term rewriting systems is done specifically on the termination side. It should be noted that this work is also relevant to the non-termination analysis. Non-termination is disproven by proving termination and the other way around. Many tools use both termination and non-termination techniques to get as complete an answer as possible. The techniques implemented in this paper might determine when a TRS is non-terminating, but they cannot decide if TRS is terminating, i.e. Mara never answers \texttt{TERMINATING}. In this chapter a number of relevant techniques and tools are discussed.
 
 \section{Dependency Pair Framework}
 One of the most popular techniques for proving both termination and non-termination is the Dependency Pair Framework\cite{thiemann2007dp}. Traditionally it was created for unsorted term rewriting systems. But there are already variants including higher-order TRSs, context-sensitive TRSs and constrained TRSs. The higher-order and constrained TRSs both contain types so a definition for sorted TRSs should also be clear. The dependency pair framework is built upon the dependency pair approach\cite{arts2000termination}. In the dependency pair framework a set $DP(R)$ is generated from ``rules'' that identify the function calls in $R$. For example, from a rule $f(x) \rightarrow g(f(x), 0)$, the set $DP(R)$ becomes $DP(R) = \{ F(x) \rightarrow G(f(x), 0), F(x) \rightarrow F(x) \}$. This is because in the rule, there is a call to $f$ and one to $g$ on the right-hand side.
@@ -14,10 +14,10 @@ One of the most popular techniques for proving both termination and non-terminat
 Now the idea is to let both non-termination and termination techniques operate on the dependency pairs instead of on the TRS itself. This way, the problems are smaller and thus easier to solve. Techniques that operate on dependency pairs are called dependency pair processors or \textit{Proc}. The processor can either return a set of dependency pair problems, or \texttt{no}. 
 
 The unfolding technique could be implemented as a DP processor and that way be used in the dependency pair framework. 
-\subsection{Finite Automata}
+\section{Finite Automata}
 A very recent technique for proving non-termination is by using finite automata \cite{ENDRULLIS:AUTOMATA}. Here, the goal is not to directly look for an infinite reduction in a TRS. Instead, a regular language is sought with properties from which non-termination follow. Then these properties are defined in a propositional formula. This formula can be analysed by a SAT solver, if the formula can be satisfied, the original TRS is non-terminating. A tree automaton is used to represent the language that is sought after, in a run of the algorithm, it has a fixed number of states. 
 
-\subsection{Non-looping Non-Termination}
+\section{Non-looping Non-Termination}
 The most common way to detect non-termination in a TRS is to find a loop. This is done by finding a finite sequence of rewriting steps such that the first term is a subterm of the last term. Loops are not the only way to detect non-termination, though. Another way is to find non-looping non-termination, as for example in \cite{emmes2012detecting}. Non-looping, as its name suggests, does not have a loop, but is able to create an infinite rewriting sequence. We use an example from \cite{emmes2012detecting}:
 \[
 \begin{array}{lrcl}

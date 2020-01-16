@@ -4,7 +4,7 @@ To benchmark tools that analyse term rewriting systems, there exist competitions
 
 These competitions are useful for us too, since the set of benchmark TRSs is freely available. We can use these to test our analyser and then also compare results. 
 
-We will look at benchmark sets from three different competitions. Firstly we will run our analyser on the TPDB (Termination Problem Data Base)\cite{TermPortal}, this database contains all the problems used in the (non-)termination competition. In this competition the idea is to classify as many input TRSs as either terminating or non-terminating. 
+We will look at benchmark sets from three different competitions. Firstly we will run our analyser on the TPDB (Termination Problem Data Base)\cite{TermPortal}. This database contains all the problems used in the (non-)termination competition. In this competition the idea is to classify as many input TRSs as either terminating or non-terminating as possible. 
 
 Another competition we will take benchmarks from is the confluence competition\cite{COPS}. This competition focuses on another property of term rewriting systems: confluence. The main reason we will also test our tool on this set is because this set contains many-sorted TRSs, where the termination competition does not contain many-sorted examples.
 
@@ -128,7 +128,7 @@ There are also some many-sorted benchmarks in this database. For these examples,
 The results are all very much the same, there is only one example which could not be solved using unification. Augmenting the TRS as a pre-processing step did not have much impact besides taking slightly longer to analyse. 
 
 \section{Transformed from Higher Order Problems}
-Lastly, we have the benchmark set that WANDA\cite{KOP:WANDASITE} could extract from the higher order database. We will again run these benchmarks with the same configurations as before: both concrete- and abstract unfolding both with augmenting versus without and with semi-unification versus unification. The results of these tests can be found in table \ref{tab:hot:conc} for the concrete unfolding tests and in table \ref{tab:hot:abst} for the abstract unfolding tests.  
+Lastly, we have the benchmark set that WANDA\cite{KOP:WANDASITE} could extract from the higher order database. We will again run these benchmarks with the same configurations as before: both concrete- and abstract unfolding both with augmenting versus without and with semi-unification versus unification. The results of these tests can be found in table \ref{tab:hot:conc} for the concrete unfolding tests and in table \ref{tab:hot:abst} for the abstract unfolding tests. Note that most of these examples are terminating. 
 
 \begin{table}[ht]
     \centering

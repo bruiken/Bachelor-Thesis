@@ -1,4 +1,4 @@
-\chapter{Semi Unification}\label{semi-unification}
+\chapter{Semi-Unification}\label{semi-unification}
 Semi-unification is yet another way to detect non-termination. As its name suggests, it is somewhat like unification. It is actually a technique that encompasses both matching and unification. If we take two terms $t_1$ and $t_2$, matching creates a substitution $\rho$ such that $\rho(t_1) = t_2$ and unification creates a substitution $\sigma$ such that $\sigma(t_1) = \sigma(t_2)$. If we combine these, we get semi-unification:
 
 \begin{definition}
@@ -7,15 +7,15 @@ Given two terms $t_1$ and $t_2$, $t_1$ and $t_2$ semi-unify if we can create two
 
 It is clear that this encompasses both matching (take $\sigma = \emptyset$) and unification (take $\rho = \emptyset$). 
 
-Semi-unification can detect non-termination of term rewriting rules, but also has other use cases, for example in type inference in Milner-Mycroft calculus\cite{Henglein:1988}. This calculus is used in some polymorphic functional programming languages. In the general case, semi-unification is undecidable\cite{KFOURY:1993}. In our case we are dealing with two input terms, for which semi-unification \textit{is} decidable.
-
-The notion of semi-unification above is actually called left-unification. Right-unification can be calculated using an algorithm for left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification. In the case for non-termination we use left-unification, this is also what we further speak of semi-unification.
-
 An algorithm to compute semi-unification for two input terms is given in for example Kapur et al\cite{SemiUnification}. In the same paper a proof is also given how semi-unification can detect non-termination:
 
 The idea is the same as with matching and unification, we will try to semi-unify the left hand side of a rule with some non-variable subterm on the right hand side. Suppose we have some rule $r_1: l \rightarrow r$. And $r'$ is a non-variable subterm of $r$. Now say that semi-unification is successful on $r'$, such that $\rho(\sigma(l)) = \sigma(r')$. If we were to apply both the substitutions on the rule $r_1$ we would get $r_1': \rho(\sigma(l)) \rightarrow \rho(\sigma(r))$, for which we know there is some subterm $\rho(\sigma(r'))$ of $\rho(\sigma(r))$. This subterm is in its place equal to $\rho(\rho(\sigma(l)))$, because of the substitution we started with. Now we can rewrite this term to $\rho(\rho(\sigma(r)))$ and further repeat the last two steps indefinitely.
 
-We will implement the algorithm described by Kapur et al for many-sorted term rewriting systems. The implementations are two separate algorithms. The first algorithm is sufficient to decide semi-unifiability, and as a result will generate a set of rewriting rules. But to obtain the substitutions, we need the second algorithm, it takes as an input the result from the first algorithm, then extracts the solution from it.
+The notion of semi-unification above is actually called left-unification. Right-unification can be calculated using an algorithm for left-unification if we swap the two input terms, so we would get $\sigma(t_1) = \rho(\sigma(t_2))$. Semi-unification captures both left- and right-unification. In the case for non-termination we use left-unification. This is also what we refer to when further speaking of semi-unification.
+
+Semi-unification can detect non-termination of term rewriting rules, but also has other use cases, for example in type inference in Milner-Mycroft calculus\cite{Henglein:1988}. This calculus is used in some polymorphic functional programming languages. In the general case, semi-unification is undecidable\cite{KFOURY:1993}. In our case we are dealing with two input terms, for which semi-unification \textit{is} decidable.
+
+We will implement the algorithm described by Kapur et al for many-sorted term rewriting systems. The implementations are two separate algorithms. The first algorithm is sufficient to decide semi-unifiability, and as a result will generate a set of rewriting rules. But to obtain the substitutions, we need the second algorithm. It takes as an input the result from the first algorithm, then extracts the solution from it.
 
 \section{Algorithm 1}
 In the algorithm we will be looking for two substitutions $\sigma$ and $\rho$, such that for two terms $t_1$ and $t_2$, $\rho(\sigma(t_1)) = \sigma(t_2)$. We have a special symbol $s_x$ for each variable $x$. $s_x$ represents $\sigma(x)$. This mapping is captured in a substitution $\theta$, so we have for each variable $x$ in $t_1$ and $t_2$: $\theta(x) = s_x$. Note that $\theta = \sigma$, but we are able to create the inverse of $\theta$ using the extra elements $s_x$. This is because these elements make it so that the mapping \textit{and} the inverse of the mapping both are bijective. 
@@ -54,17 +54,18 @@ The algorithm works by starting with two terms. We keep trying to rewrite the te
 \STATE Apply cancellativity rules on both sides of the equation
 \FORALL {Equations resulting from the cancellativity}
   \IF {An equation in the form of $f(x_1, \dots, x_n) = g(y_1, \dots, y_n)$ is encountered, with $f \neq g$ \OR $n \neq m$ }
-    \RETURN Failure
+    \STATE \textbf{Throw} Failure
   \ELSIF {An equation in the form of $\rho^i(s_x) = f(\dots \rho^{i + j}(s_x) \dots)$ is encountered, where the right side means that there is some subterm $\rho^{i + j}(s_x)$ in it, with $i, j \in \mathbb{N}$}
-    \RETURN Failure
+    \STATE \textbf{Throw} Failure
   \ENDIF
 \ENDFOR
 \STATE \COMMENT {Now we rewrite the equations into rules}:
-\STATE Terms containing function symbols are considered lower than ones that do not
-\STATE Other terms are compared by their variables (in lexicographic order from right to left) using $>_\theta$
+\STATE Terms containing function symbols are considered lower than ones that do not.
+\STATE Other terms are compared by their variables (in lexicographic order from right to left) using $>_\theta$.
+\STATE Replace each equation $s = t$ by a rule $s \rightarrow t$ with $t$ lower than $s$.
 \STATE Now, for each rule, try to rewrite both sides using other rules. If this can be done, replace the rewritten rule by the result.
-\STATE If this can be done, go back to to line 4 with this rule as input (keep the others). 
-\STATE Otherwise, report semi-unifiability, and return the resulting rules. 
+\STATE If this can be done, go back to to line 4 with this rule as the equation (keep the others). 
+\STATE Otherwise, report semi-unifiability, and \textbf{return} the resulting rules. 
 \end{algorithmic}
 \end{algorithm}
 
@@ -96,7 +97,7 @@ $$
     r_{1,3}: & \rho(s_x) & \rightarrow & 1
 \end{array}
 $$
-Since we can rewrite $r_{1,3}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $\rho(1) \rightarrow 1$, which we will replace rule $r_{1,3}$ by. But before we can possibly do more rewritings, we need to apply distributivity and cancellativity to them and finally create a rule from it. Distributivity changes nothing and cancellation of $\rho$ leads to $1 = 1$. This equation is useless, it only says that the two function symbols $1$ are equal, this means we can ignore it as it will have no impact on the result. To conclude this step, we now have the following two rules:
+Since we can rewrite $r_{1,3}$ using $r_{1,2}$, we are not done yet. Doing this rewriting results in $\rho(1) \rightarrow 1$, which we will replace rule $r_{1,3}$ by. But before we can possibly do more rewritings, we need to apply distributivity and cancellativity to them and finally create a rule from it. Distributivity gives us $1 = 1$ and then cancellation gives us an empty set of equations (meaning that we do not add any rule). We now have the following two rules:
 $$
 \begin{array}{lrcl}
     r_{1,1}: & \rho(s_y) & \rightarrow & h(s_y) \\
@@ -138,7 +139,7 @@ The algorithm can be found in Algorithm \ref{semiunification2} on page \pageref{
 \begin{algorithmic}[1]
 \STATE Input: rules resulting from algorithm 1
 \STATE Initialise $\rho = \emptyset$, $\sigma = \emptyset$ and $\mathcal{V} = V$
-\FORALL {Subterms like $\rho(s_x)$ in all right hand sides}
+\FORALL {Subterms of the form $\rho(s_x)$ in all right hand sides}
   \STATE Create fresh variable $u$ with $\textit{type}(u) = \textit{type}(x)$ and special symbol $s_u$
   \STATE Extend $\theta$ with $\theta(u) = s_u$
   \STATE $\mathcal{V} = \mathcal{V} \cup \{ u \}$
@@ -159,11 +160,11 @@ The algorithm can be found in Algorithm \ref{semiunification2} on page \pageref{
 \end{algorithmic}
 \end{algorithm}
 \subsection{Intuition}
-The algorithm will return substitutions $\rho$ and $\sigma$ on an input system returned from the first algorithm. The algorithm has three general steps to it. In the first step (the first for loop), $rho$ symbols on the right hand sides are replaced by new variables, this replacement is reflected in all the rules. After this step there are no $\rho$ symbols left in any right side of any rule.  
+The algorithm will return substitutions $\rho$ and $\sigma$ on an input system returned from the first algorithm. The algorithm has three general steps to it. In the first step (the first for loop), $\rho$ symbols on the right hand sides are replaced by new variables. This replacement is reflected in all the rules. After this step there are no $\rho$ symbols left in any right side of any rule.  
 
 The second step takes care of the rules where the left side does not have a $\rho$ symbol. In this case the rule basically describes a substitution of $\sigma$: the left side is in the form of $s_x$, which means $\sigma(x)$. So after we replace the instances of $s_y$ with $y$ on the right side using $\theta^{-1}$ we can create a substitution step.
 
-The last step of the algorithm takes care of the left sides that \textit{do} contain $\rho$ symbols. Note that this left hand side may contain any number of $\rho$ symbols. For this reason we create a new fresh variable for each symbol. This may lead to unnecessary variables. In the end the idea is the same as in step 2 but instead we extend of extending $\sigma$, we extend $\rho$. 
+The last step of the algorithm takes care of the left sides that \textit{do} contain $\rho$ symbols. Note that this left hand side may contain any number of $\rho$ symbols. For this reason we create a new fresh variable for each symbol. This may lead to unnecessary variables. In the end the idea is the same as in step 2 but instead of extending $\sigma$, we extend $\rho$. 
 
 \subsection{Examples} % examples alg 2
 We will now look at two examples for the second algorithm. The first example is a continuation on the first example of the first algorithm:

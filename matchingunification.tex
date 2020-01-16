@@ -10,32 +10,34 @@ Matching can be used to detect non-termination, if for some rule, the left side 
 
 Cora already has matching built into it since it is also required to check if a rule can be applied to a term. Note that when applying a rule, you match the left hand side of the rule with the term you want to apply it on, and finally apply the resulting substitution on the right hand side of the rule.
 
-The algorithm to match two terms is given in Algorithm \ref{matching} on page \pageref{matching}. This is the algorithm as implemented in Cora. Note that this algorithm does not mention any types. The type checks are embedded in comparisons between terms. 
+The algorithm to match two terms is given in Algorithm \ref{matching} on page \pageref{matching}. This is the algorithm as implemented in Cora. Note that this algorithm does not mention any types. The type checks are embedded in comparisons between terms. Also note that when recursively calling \texttt{match} on line 19, $\sigma$ is not initialised to $\emptyset$ in the new call. The given substitution from the recursive call is used instead.
 
-As noted above, the matching algorithm (including the type checks) was already built into Cora, but it was not implemented as an analyser yet. Now it is, though, called the \texttt{MatchingAnalyser}. 
+As noted above, the matching algorithm was already built into Cora, but it was not implemented as an analyser yet. In Mara it is, called the \texttt{MatchingAnalyser}. 
 
 \begin{algorithm}
 \caption{Matching}
 \label{matching}
 \begin{algorithmic}[1]
-\STATE Input terms $t_1$ and $t_2$, initialize $\sigma = \emptyset$
+\STATE Input terms $t_1$ and $t_2$, initialise $\sigma = \emptyset$
 \IF {$t_1$ is a variable}
   \IF {$\sigma$ contains $t_1$}
     \IF {$\sigma(t_1) \neq t_2$}
       \STATE \textbf{throw} Failure
     \ENDIF
   \ELSE
-    \STATE $\sigma(t_1) = t_2$
+    \STATE $\sigma(t_1) := t_2$
+    \RETURN $\sigma$
   \ENDIF
 \ELSIF {$t_1$ is in the form of $f(x_1, \dots, x_n)$, $n$ being the arity of $f$}
   \IF {$t_2$ is a variable}
-    \RETURN Failure
+    \STATE \textbf{throw} Failure
   \ELSIF {$t_2$ is in the form of $g(y_1, \dots, y_m)$, $m$ being the arity of $g$}
     \IF {$f \neq g$}
-      \RETURN Failure
+      \STATE \textbf{throw} Failure
     \ENDIF
     \FORALL {$i \in \left[1, n\right]$}
       \STATE match $x_i$ with $y_i$ using $\sigma$
+      \RETURN $\sigma$
     \ENDFOR
   \ENDIF
 \ENDIF
@@ -47,49 +49,47 @@ Similarly to matching, we can also apply unification to detect non-termination o
 
 \textbf{Example 4.2}: Take the rule $r_1: f(g(x), z, y) \rightarrow f(y, g(x), y)$. To try to unify the left side with some non-variable subterm on the right, the most sensible subterm to choose is the entire right side. We can unify these two sides by taking $\sigma = \{ g(x) \leftarrow y, g(x) \leftarrow z \}$. If we apply $r_1$ to $\sigma(f(g(x), z, y)) = f(g(x), g(x), g(x))$, we get $f(g(x), g(x), g(x))$ back, which can immediately be applied to $r_1$ again; this clearly keeps looping indefinitely.
 
-Implementing the unification algorithm that works for many-sorted terms does not require many adaptations from an existing algorithm such as the one from Martelli and Montanari.\cite{Martelli:1982} The algorithm in pseudocode can be found in Algorithm \ref{unification} on page \pageref{unification}. Unlike earlier, type checks are included, but they are not explicitly noted in the comparison between terms and function symbols (e.g. lines 4 and 24).  
+Implementing the unification algorithm that works for many-sorted terms does not require many adaptations from an existing algorithm such as the one from Martelli and Montanari.\cite{Martelli:1982} The algorithm in pseudocode can be found in Algorithm \ref{unification} on page \pageref{unification}. Unlike earlier, type checks are included, but they are not explicitly noted in the comparison between terms and function symbols.  
 
 \begin{algorithm}
 \caption{Unification}
 \label{unification}
-\begin{algorithmic}[5]
-\STATE Input terms $t_1$ and $t_2$, initialize $\sigma = \emptyset$
+\begin{algorithmic}[1]
+\STATE Input terms $t_1$ and $t_2$, initialise $\sigma = \emptyset$
 \IF {$t_1$ is a variable}
   \IF {$t_2$ is a variable}
     \IF {$t_1 \neq t_2$}
       \IF {Type of $t_1 \neq$ type of $t_2$}
-        \RETURN Failure
+        \STATE \textbf{throw} Failure
       \ELSE
-        \RETURN $\sigma(t_2) = t_1$
+        \STATE $\sigma(t_2) := t_1$
       \ENDIF
-    \ELSE
-      \RETURN $\sigma$
     \ENDIF
+    \RETURN $\sigma$
   \ELSE
     \RETURN unify $t_2$, $t_1$
   \ENDIF
 \ELSIF {$t_1$ is in the form of $f(s_1, \dots, s_n)$, $n$ being the arity of $f$}
   \IF {$t_2$ is a variable}
     \IF {$t_1$ contains $t_2$ \OR type of $t_1 \neq$ type of $t_2$}
-      \RETURN Failure
+      \STATE \textbf{throw} Failure
     \ELSE 
-      \RETURN $\sigma(t_2) = t_1$
+      \STATE $\sigma(t_2) := t_1$
+      \RETURN $\sigma$
     \ENDIF
   \ELSIF {$t_2$ is in the form of $g(u_1, \dots, u_m)$, $m$ being the arity of $g$}
     \IF {$f \neq g$}
-      \RETURN Failure
+      \STATE \textbf{throw} Failure
     \ENDIF
     \FORALL {$i \in \left[1, n\right]$}
-      \STATE $\gamma$ = unify $\sigma(s_i)$ with $u_i$
+      \STATE $\gamma$ := unify $\sigma(s_i)$ with $\sigma(u_i)$
       \FORALL {Variable $v$ in domain of $\gamma$ }  
         \IF {$v$ in domain of $\sigma$ \AND $\sigma(v) \neq \gamma(v)$}
-          \RETURN Failure
+          \STATE \textbf{throw} Failure
         \ELSE
-          \STATE $\sigma(v) = \gamma(v)$
+          \STATE $\sigma(v) := \gamma(v)$
         \ENDIF
       \ENDFOR
-      \STATE $\sigma(x) = \gamma(\sigma(x))$ for each x in domain of $\gamma$
-      \STATE $t_2$ := $\sigma(t_2)$
     \ENDFOR
     \RETURN $\sigma$
   \ENDIF
